@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from django.db import models
 from textblob import TextBlob
 import json
 import re
@@ -100,7 +101,15 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
     
     def generate_religious_insights(self, journal_entry, content, sentiment_score):
         """Generate religious insights based on keywords and sentiment"""
-        user_profile = UserProfile.objects.get(user=journal_entry.user)
+        # Get or create user profile
+        user_profile, created = UserProfile.objects.get_or_create(
+            user=journal_entry.user,
+            defaults={
+                'prefer_biblical': True,
+                'prefer_islamic': True,
+                'prefer_psychological': True
+            }
+        )
         
         # Biblical insight
         if user_profile.prefer_biblical:
