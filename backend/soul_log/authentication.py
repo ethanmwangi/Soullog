@@ -213,3 +213,5 @@ def current_user(request):
         return Response({
             'error': 'Not authenticated'
         }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    
