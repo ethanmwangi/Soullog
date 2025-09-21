@@ -34,15 +34,70 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 class JournalEntryListCreateView(generics.ListCreateAPIView):
     serializer_class = JournalEntryWithInsightsSerializer
-    permission_classes = [permissions.IsAuthenticated]  # Require authentication
+    permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
         journal_entry = serializer.save(user=self.request.user)
-        # Analyze the entry and generate insights
-        self.analyze_and_generate_insights(journal_entry)
+        # Simple analysis for now (skip OpenAI to save time)
+        self.analyze_entry_simple(journal_entry)
+    
+    def analyze_entry_simple(self, journal_entry):
+        """Quick analysis without OpenAI"""
+        from textblob import TextBlob
+        import json
+        
+        content = journal_entry.content.lower()
+        blob = TextBlob(journal_entry.content)
+        sentiment_score = blob.sentiment.polarity
+        
+        # Update journal entry
+        journal_entry.sentiment_score = sentiment_score
+        journal_entry.keywords = ','.join(content.split()[:5])
+        journal_entry.save()
+        
+        # Get user preferences
+        user_profile, created = UserProfile.objects.get_or_create(
+            user=journal_entry.user,
+            defaults={'prefer_biblical': True, 'prefer_islamic': True, 'prefer_psychological': True}
+        )
+        
+        # Quick psychological insight
+        if sentiment_score < -0.2:
+            psych_content = "I notice you might be going through a challenging time. Remember that difficult emotions are temporary and it's okay to seek support."
+        elif sentiment_score > 0.2:
+            psych_content = "It's wonderful to see positive emotions in your reflection! Take a moment to appreciate what's going well in your life."
+        else:
+            psych_content = "Your reflection shows emotional balance. This is a good time for self-reflection and planning ahead."
+        
+        GeneratedInsight.objects.create(
+            journal_entry=journal_entry,
+            insight_type='psychological',
+            title="Personal Reflection",
+            content=psych_content
+        )
+        
+        # Quick biblical insight
+        if user_profile.prefer_biblical:
+            GeneratedInsight.objects.create(
+                journal_entry=journal_entry,
+                insight_type='biblical',
+                title="God's Peace",
+                content="Remember that God is with you in all circumstances. Cast your cares upon Him, for He cares for you.",
+                scripture_reference="'Cast all your anxiety on him because he cares for you.' - 1 Peter 5:7"
+            )
+        
+        # Quick Islamic insight  
+        if user_profile.prefer_islamic:
+            GeneratedInsight.objects.create(
+                journal_entry=journal_entry,
+                insight_type='islamic',
+                title="Trust in Allah",
+                content="Allah knows what is best for you. Trust in His wisdom and find peace in His guidance.",
+                scripture_reference="'And Allah is the best of planners.' - Quran 8:30"
+            )
     
     def analyze_and_generate_insights(self, journal_entry):
         """Analyze journal entry and generate AI insights using OpenAI"""
