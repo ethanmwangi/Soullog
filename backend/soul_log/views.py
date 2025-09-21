@@ -20,57 +20,87 @@ from .serializers import (
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_object(self):
-        profile, created = UserProfile.objects.get_or_create(user=self.request.user)
-        return profile
-
-class JournalEntryListCreateView(generics.ListCreateAPIView):
-    serializer_class = JournalEntrySerializer
     permission_classes = [permissions.AllowAny]  # Allow testing without auth
     
-    def get_queryset(self):
+    def get_object(self):
         if self.request.user.is_authenticated:
-            return JournalEntry.objects.filter(user=self.request.user)
-        else:
-            # For testing - get first user or create one
-            from django.contrib.auth.models import User
-            user, created = User.objects.get_or_create(username='testuser', defaults={'email': 'test@example.com'})
-            return JournalEntry.objects.filter(user=user)
-    
-    def perform_create(self, serializer):
-        if self.request.user.is_authenticated:
-            user = self.request.user
+            profile, created = UserProfile.objects.get_or_create(user=self.request.user)
         else:
             # For testing - use test user
             from django.contrib.auth.models import User
             user, created = User.objects.get_or_create(username='testuser', defaults={'email': 'test@example.com'})
-        
-        journal_entry = serializer.save(user=user)
+            profile, created = UserProfile.objects.get_or_create(user=user)
+        return profile
+
+class JournalEntryListCreateView(generics.ListCreateAPIView):
+    serializer_class = JournalEntryWithInsightsSerializer
+    permission_classes = [permissions.IsAuthenticated]  # Require authentication
+    
+    def get_queryset(self):
+        return JournalEntry.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        journal_entry = serializer.save(user=self.request.user)
         # Analyze the entry and generate insights
         self.analyze_and_generate_insights(journal_entry)
     
     def analyze_and_generate_insights(self, journal_entry):
-        """Analyze journal entry and generate AI insights"""
-        content = journal_entry.content
+        """Analyze journal entry and generate AI insights using OpenAI"""
+        from .ai_service import AIInsightService
         
-        # Sentiment Analysis using TextBlob
-        blob = TextBlob(content)
-        sentiment_score = blob.sentiment.polarity  # -1 to 1
+        # Get user preferences
+        user_profile, created = UserProfile.objects.get_or_create(
+            user=journal_entry.user,
+            defaults={
+                'prefer_biblical': True,
+                'prefer_islamic': True,
+                'prefer_psychological': True
+            }
+        )
         
-        # Extract keywords (simple approach)
-        words = re.findall(r'\b\w+\b', content.lower())
-        keywords = [word for word in words if len(word) > 3][:10]  # Top 10 keywords
+        preferences = {
+            'prefer_psychological': user_profile.prefer_psychological,
+            'prefer_biblical': user_profile.prefer_biblical,
+            'prefer_islamic': user_profile.prefer_islamic,
+        }
         
-        # Update journal entry with analysis
-        journal_entry.sentiment_score = sentiment_score
-        journal_entry.keywords = ','.join(keywords)
-        journal_entry.save()
+        # Use AI service to analyze
+        ai_service = AIInsightService()
+        analysis = ai_service.analyze_journal_entry(journal_entry.content, preferences)
         
-        # Generate insights based on content and sentiment
-        self.generate_psychological_insight(journal_entry, content, sentiment_score)
-        self.generate_religious_insights(journal_entry, content, sentiment_score)
+        if analysis:
+            # Update journal entry with AI analysis
+            journal_entry.sentiment_score = analysis.get('sentiment_score', 0)
+            journal_entry.keywords = ','.join(analysis.get('keywords', []))
+            journal_entry.detected_emotions = json.dumps(analysis.get('emotions', []))
+            journal_entry.save()
+            
+            # Generate insights based on AI analysis
+            if preferences['prefer_psychological'] and analysis.get('psychological_insight'):
+                GeneratedInsight.objects.create(
+                    journal_entry=journal_entry,
+                    insight_type='psychological',
+                    title=analysis['psychological_insight']['title'],
+                    content=analysis['psychological_insight']['content']
+                )
+            
+            if preferences['prefer_biblical'] and analysis.get('biblical_insight'):
+                GeneratedInsight.objects.create(
+                    journal_entry=journal_entry,
+                    insight_type='biblical',
+                    title=analysis['biblical_insight']['title'],
+                    content=analysis['biblical_insight']['content'],
+                    scripture_reference=analysis['biblical_insight'].get('scripture', '')
+                )
+            
+            if preferences['prefer_islamic'] and analysis.get('islamic_insight'):
+                GeneratedInsight.objects.create(
+                    journal_entry=journal_entry,
+                    insight_type='islamic',
+                    title=analysis['islamic_insight']['title'],
+                    content=analysis['islamic_insight']['content'],
+                    scripture_reference=analysis['islamic_insight'].get('scripture', '')
+                )
     
     def generate_psychological_insight(self, journal_entry, content, sentiment_score):
         """Generate psychological insight"""
@@ -191,10 +221,16 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
 
 class JournalEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JournalEntryWithInsightsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Allow testing without auth
     
     def get_queryset(self):
-        return JournalEntry.objects.filter(user=self.request.user)
+        if self.request.user.is_authenticated:
+            return JournalEntry.objects.filter(user=self.request.user)
+        else:
+            # For testing - use test user
+            from django.contrib.auth.models import User
+            user, created = User.objects.get_or_create(username='testuser', defaults={'email': 'test@example.com'})
+            return JournalEntry.objects.filter(user=user)
 
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])  # Allow testing without auth
