@@ -10,7 +10,7 @@ from textblob import TextBlob
 import json
 import re
 from rest_framework.authtoken.models import Token
-from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 
 from .models import UserProfile, JournalEntry, InsightTemplate, GeneratedInsight
 from .serializers import (
@@ -18,10 +18,9 @@ from .serializers import (
     JournalEntrySerializer, 
     JournalEntryWithInsightsSerializer,
     GeneratedInsightSerializer,
-    UserRegistrationSerializer, # <-- I ADDED THIS
+    UserRegistrationSerializer,
 )
 
-# --- I ADDED THIS ENTIRE CLASS ---
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
@@ -37,12 +36,10 @@ class UserRegistrationView(generics.CreateAPIView):
             'email': user.email
         }, status=status.HTTP_201_CREATED)
 
-# --- I UPDATED THE FOLLOWING VIEWS ---
-
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [TokenAuthentication]
     
     def get_object(self):
         profile, created = UserProfile.objects.get_or_create(user=self.request.user)
@@ -51,15 +48,14 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 class JournalEntryListCreateView(generics.ListCreateAPIView):
     serializer_class = JournalEntryWithInsightsSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [TokenAuthentication]
     
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
         journal_entry = serializer.save(user=self.request.user)
-        # Simple analysis for now (skip OpenAI to save time)
-        self.analyze_entry_simple(journal_entry)
+        self.analyze_and_generate_insights(journal_entry)
     
     def analyze_entry_simple(self, journal_entry):
         """Quick analysis without OpenAI"""
@@ -70,18 +66,15 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
         blob = TextBlob(journal_entry.content)
         sentiment_score = blob.sentiment.polarity
         
-        # Update journal entry
         journal_entry.sentiment_score = sentiment_score
         journal_entry.keywords = ','.join(content.split()[:5])
         journal_entry.save()
         
-        # Get user preferences
         user_profile, created = UserProfile.objects.get_or_create(
             user=journal_entry.user,
             defaults={'prefer_biblical': True, 'prefer_islamic': True, 'prefer_psychological': True}
         )
         
-        # Quick psychological insight
         if sentiment_score < -0.2:
             psych_content = "I notice you might be going through a challenging time. Remember that difficult emotions are temporary and it's okay to seek support."
         elif sentiment_score > 0.2:
@@ -96,7 +89,6 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
             content=psych_content
         )
         
-        # Quick biblical insight
         if user_profile.prefer_biblical:
             GeneratedInsight.objects.create(
                 journal_entry=journal_entry,
@@ -106,7 +98,6 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
                 scripture_reference="'Cast all your anxiety on him because he cares for you.' - 1 Peter 5:7"
             )
         
-        # Quick Islamic insight  
         if user_profile.prefer_islamic:
             GeneratedInsight.objects.create(
                 journal_entry=journal_entry,
@@ -173,14 +164,14 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
 class JournalEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JournalEntryWithInsightsSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [TokenAuthentication]
     
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
+@authentication_classes([TokenAuthentication])
 def dashboard_stats(request):
     """Get dashboard statistics for the user"""
     entries = JournalEntry.objects.filter(user=request.user)
