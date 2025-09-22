@@ -34,14 +34,13 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
 
 class JournalEntryListCreateView(generics.ListCreateAPIView):
     serializer_class = JournalEntryWithInsightsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # Requires token authentication
     
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
         journal_entry = serializer.save(user=self.request.user)
-        # Simple analysis for now (skip OpenAI to save time)
         self.analyze_entry_simple(journal_entry)
     
     def analyze_entry_simple(self, journal_entry):

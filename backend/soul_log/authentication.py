@@ -4,221 +4,23 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from django.contrib.auth import authenticate, login, logout
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from .models import UserProfile
-from .serializers import UserSerializer, UserProfileSerializer
-
-@csrf_exempt
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def register(request):
-    """Register a new user"""
-    data = request.data
-    
-    # Check if user already exists
-    if User.objects.filter(username=data.get('username')).exists():
-        return Response({
-            'error': 'Username already exists'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    if User.objects.filter(email=data.get('email')).exists():
-        return Response({
-            'error': 'Email already exists'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    try:
-        # Create user
-        user = User.objects.create_user(
-            username=data.get('username'),
-            email=data.get('email'),
-            password=data.get('password'),
-            first_name=data.get('first_name', ''),
-            last_name=data.get('last_name', '')
-        )
-        
-        # Create user profile with default preferences
-        UserProfile.objects.create(
-            user=user,
-            prefer_biblical=True,
-            prefer_islamic=True,
-            prefer_psychological=True
-        )
-        
-        # Log the user in
-        login(request, user)
-        
-        return Response({
-            'message': 'User created successfully',
-            'user': UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
-        
-    except Exception as e:
-        return Response({
-            'error': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-@csrf_exempt
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    """Login user"""
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    if not username or not password:
-        return Response({
-            'error': 'Username and password required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    user = authenticate(request, username=username, password=password)
-    
-    if user:
-        login(request, user)
-        return Response({
-            'message': 'Login successful',
-            'user': UserSerializer(user).data
-        }, status=status.HTTP_200_OK)
-    else:
-        return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-@csrf_exempt
-@api_view(['POST'])
-def logout_view(request):
-    """Logout user"""
-    logout(request)
-    return Response({
-        'message': 'Logout successful'
-    }, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-def current_user(request):
-    """Get current authenticated user"""
-    if request.user.is_authenticated:
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        return Response({
-            'user': UserSerializer(request.user).data,
-            'profile': UserProfileSerializer(profile).data
-        })
-    else:
-        return Response({
-            'error': 'Not authenticated'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-    """Register a new user"""
-    data = request.data
-    
-    # Check if user already exists
-    if User.objects.filter(username=data.get('username')).exists():
-        return Response({
-            'error': 'Username already exists'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    if User.objects.filter(email=data.get('email')).exists():
-        return Response({
-            'error': 'Email already exists'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    try:
-        # Create user
-        user = User.objects.create_user(
-            username=data.get('username'),
-            email=data.get('email'),
-            password=data.get('password'),
-            first_name=data.get('first_name', ''),
-            last_name=data.get('last_name', '')
-        )
-        
-        # Create user profile with default preferences
-        UserProfile.objects.create(
-            user=user,
-            prefer_biblical=True,
-            prefer_islamic=True,
-            prefer_psychological=True
-        )
-        
-        # Log the user in
-        login(request, user)
-        
-        return Response({
-            'message': 'User created successfully',
-            'user': UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
-        
-    except Exception as e:
-        return Response({
-            'error': str(e)
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def login_view(request):
-    """Login user"""
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    if not username or not password:
-        return Response({
-            'error': 'Username and password required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    user = authenticate(request, username=username, password=password)
-    
-    if user:
-        login(request, user)
-        return Response({
-            'message': 'Login successful',
-            'user': UserSerializer(user).data
-        }, status=status.HTTP_200_OK)
-    else:
-        return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['POST'])
-def logout_view(request):
-    """Logout user"""
-    logout(request)
-    return Response({
-        'message': 'Logout successful'
-    }, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-def current_user(request):
-    """Get current authenticated user"""
-    if request.user.is_authenticated:
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        return Response({
-            'user': UserSerializer(request.user).data,
-            'profile': UserProfileSerializer(profile).data
-        })
-    else:
-        return Response({
-            'error': 'Not authenticated'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
-from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile
 from .serializers import UserSerializer, UserProfileSerializer
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 def register(request):
-    """Register a new user"""
+    """Register a new user and return token"""
     data = request.data
     
-    # Check if user already exists
+    if not all([data.get('username'), data.get('email'), data.get('password')]):
+        return Response({
+            'error': 'Username, email, and password are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
     if User.objects.filter(username=data.get('username')).exists():
         return Response({
             'error': 'Username already exists'
@@ -230,7 +32,6 @@ def register(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        # Create user
         user = User.objects.create_user(
             username=data.get('username'),
             email=data.get('email'),
@@ -239,7 +40,6 @@ def register(request):
             last_name=data.get('last_name', '')
         )
         
-        # Create user profile with default preferences
         UserProfile.objects.create(
             user=user,
             prefer_biblical=True,
@@ -247,12 +47,12 @@ def register(request):
             prefer_psychological=True
         )
         
-        # Log the user in
-        login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
         
         return Response({
             'message': 'User created successfully',
-            'user': UserSerializer(user).data
+            'user': UserSerializer(user).data,
+            'token': token.key
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
@@ -262,9 +62,8 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 def login_view(request):
-    """Login user"""
+    """Login user and return token"""
     username = request.data.get('username')
     password = request.data.get('password')
     
@@ -273,37 +72,16 @@ def login_view(request):
             'error': 'Username and password required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    user = authenticate(request, username=username, password=password)
+    user = authenticate(username=username, password=password)
     
     if user:
-        login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
         return Response({
             'message': 'Login successful',
-            'user': UserSerializer(user).data
+            'user': UserSerializer(user).data,
+            'token': token.key
         }, status=status.HTTP_200_OK)
     else:
         return Response({
             'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['POST'])
-def logout_view(request):
-    """Logout user"""
-    logout(request)
-    return Response({
-        'message': 'Logout successful'
-    }, status=status.HTTP_200_OK)
-
-@api_view(['GET'])
-def current_user(request):
-    """Get current authenticated user"""
-    if request.user.is_authenticated:
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        return Response({
-            'user': UserSerializer(request.user).data,
-            'profile': UserProfileSerializer(profile).data
-        })
-    else:
-        return Response({
-            'error': 'Not authenticated'
         }, status=status.HTTP_401_UNAUTHORIZED)
