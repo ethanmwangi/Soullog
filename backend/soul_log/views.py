@@ -129,10 +129,17 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
         ai_service = AIInsightService()
         analysis = ai_service.analyze_journal_entry(journal_entry.content, preferences)
         
+        # *** FIXED ERROR HANDLING ***
+        # If the analysis contains an error key, stop processing.
+        if analysis and "error" in analysis:
+            print(f"Could not generate AI insights for entry {journal_entry.id}: {analysis['error']}")
+            # Optionally, you could save the error to the journal entry model if you add a field for it
+            return
+        
         if analysis:
             journal_entry.sentiment_score = analysis.get('sentiment_score', 0)
             journal_entry.keywords = ','.join(analysis.get('keywords', []))
-            journal_entry.detected_emotions = json.dumps(analysis.get('emotions', []))
+            journal_entry.detected_emotions = json.dumps(analysis.get('detected_emotions', []))
             journal_entry.save()
             
             if preferences['prefer_psychological'] and analysis.get('psychological_insight'):
