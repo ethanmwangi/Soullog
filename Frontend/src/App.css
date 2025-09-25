@@ -36,12 +36,14 @@ body {
   margin: 0;
   padding-top: 4rem; /* Add padding for theme toggle */
   transition: background 0.3s, color 0.3s;
+  overflow: hidden; /* Hide scrollbars from particles */
 }
 
 .app-container {
   width: 100%;
   max-width: 800px;
   padding: 2rem;
+  z-index: 1; /* Ensure app content is above particles */
 }
 
 .journal-entry-card {
@@ -51,6 +53,8 @@ body {
   padding: 2.5rem;
   text-align: center;
   transition: background 0.3s, box-shadow 0.3s;
+  position: relative; /* Ensure z-index is respected */
+  z-index: 1;
 }
 
 h1 {
@@ -220,6 +224,7 @@ cite {
   padding: 4px;
   display: flex;
   box-shadow: 0 2px 8px var(--shadow);
+  z-index: 10; /* Make sure it's on top */
 }
 
 .toggle-button {
@@ -234,5 +239,33 @@ cite {
 .toggle-button.active {
   background: var(--accent-gold);
   color: white;
+}
+
+/* --- Background Particle Animation --- */
+#particle-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0; /* Behind all content */
+  pointer-events: none; /* Allow clicks to go through */
+}
+
+.particle {
+  position: absolute;
+  background-color: var(--accent-gold);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: move 25s linear infinite;
+}
+
+@keyframes move {
+  0% {
+    transform: translateY(100vh) translateX(var(--x-start)) scale(var(--scale));
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--x-end)) scale(var(--scale));
+  }
 }
 

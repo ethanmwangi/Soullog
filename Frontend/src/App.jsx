@@ -28,6 +28,27 @@ const CrescentIcon = () => (
   </svg>
 );
 
+// --- Background Particle Component ---
+const ParticleContainer = () => {
+  const particles = Array.from({ length: 30 }).map((_, i) => {
+    const size = Math.random() * 5 + 2; // 2px to 7px
+    const style = {
+      width: `${size}px`,
+      height: `${size}px`,
+      left: `${Math.random() * 100}vw`,
+      animationDuration: `${Math.random() * 15 + 15}s`, // 15s to 30s
+      animationDelay: `${Math.random() * -30}s`, // Start at random points
+      '--x-start': `${Math.random() * 100 - 50}vw`, // Random horizontal start offset
+      '--x-end': `${Math.random() * 100 - 50}vw`,     // Random horizontal end offset
+      '--scale': Math.random() + 0.5,
+    };
+    return <div key={i} className="particle" style={style} />;
+  });
+
+  return <div id="particle-container">{particles}</div>;
+};
+
+
 // --- Mock Insight Functions ---
 const getMockPsychologicalInsight = (text) => {
   if (!text.trim()) return null;
@@ -90,6 +111,7 @@ function App() {
 
   return (
     <>
+      <ParticleContainer />
       <div className="theme-toggle" onClick={toggleTheme}>
          <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
          <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
