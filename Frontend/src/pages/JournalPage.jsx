@@ -59,7 +59,7 @@ const InsightIcons = {
   islamic: <CrescentIcon />,
 };
 
-function JournalPage() {
+function JournalPage({ onLogout }) {
   const [entry, setEntry] = useState("");
   const [insights, setInsights] = useState([]);
 
@@ -80,6 +80,7 @@ function JournalPage() {
   return (
     <div className="app-container">
       <main className="journal-entry-card">
+        <button className="logout-button" onClick={onLogout}>Logout</button>
         <h1>SoulLog</h1>
         <p>Your safe space to reflect, understand, and grow.</p>
         <textarea
