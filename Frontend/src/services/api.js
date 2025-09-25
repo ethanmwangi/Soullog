@@ -31,7 +31,7 @@ export const authAPI = {
   // Register new user
   register: async (userData) => {
     try {
-      const response = await api.post('/register/', userData);
+      const response = await api.post('/auth/register/', userData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Registration failed' };
@@ -41,8 +41,6 @@ export const authAPI = {
   // Login user  
   login: async (credentials) => {
     try {
-      // Your Django backend expects username/password, but frontend sends email
-      // We'll need to adjust this based on your backend
       const response = await api.post('/auth/login/', credentials);
       return response.data;
     } catch (error) {
@@ -55,7 +53,7 @@ export const authAPI = {
     try {
       const response = await api.get('/auth/me/');
       return response.data;
-    } catch (error) {
+    } catch (error) { 
       throw error.response?.data || { error: 'Failed to get user info' };
     }
   },
@@ -77,7 +75,7 @@ export const journalAPI = {
   // Create journal entry
   createEntry: async (entryData) => {
     try {
-      const response = await api.post('/journal-entries/', entryData);
+      const response = await api.post('/entries/', entryData);
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Failed to create entry' };
@@ -87,7 +85,7 @@ export const journalAPI = {
   // Get all entries
   getEntries: async () => {
     try {
-      const response = await api.get('/journal-entries/');
+      const response = await api.get('/entries/');
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Failed to get entries' };
@@ -97,7 +95,7 @@ export const journalAPI = {
   // Get dashboard stats
   getDashboardStats: async () => {
     try {
-      const response = await api.get('/dashboard-stats/');
+      const response = await api.get('/dashboard/');
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Failed to get dashboard stats' };
