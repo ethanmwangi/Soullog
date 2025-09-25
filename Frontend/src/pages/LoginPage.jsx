@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css';
 
-function LoginPage() {
+// Accept onLogin as a prop
+function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -13,12 +14,14 @@ function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    // TODO: Add actual login logic here
+    // TODO: Replace this with an actual API call
     console.log("Logging in with:", { email, password });
+
     // Simulate API call
     setTimeout(() => {
-      setIsLoading(false);
-      // Replace with actual navigation upon success
+      // On success, call the onLogin function passed from App.jsx
+      onLogin();
+      // No need to set isLoading to false, as the view will change.
     }, 1000);
   };
 
