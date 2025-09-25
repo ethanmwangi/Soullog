@@ -4,14 +4,11 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate # Added for login
 from django.shortcuts import get_object_or_404
 from django.db import models
 import json
 import re
-from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import AllowAny # Added for login
 
 from .models import UserProfile, JournalEntry, InsightTemplate, GeneratedInsight
 from .serializers import (
@@ -19,58 +16,9 @@ from .serializers import (
     JournalEntrySerializer, 
     JournalEntryWithInsightsSerializer,
     GeneratedInsightSerializer,
-    UserRegistrationSerializer,
 )
 from .ai_service import AIInsightService  # Hugging Face AI service import
 
-class UserRegistrationView(generics.CreateAPIView):
-    serializer_class = UserRegistrationSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-            'user_id': user.pk,
-            'email': user.email
-        }, status=status.HTTP_201_CREATED)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    """Login user and return token"""
-    email = request.data.get('email')
-    password = request.data.get('password')
-    
-    if not email or not password:
-        return Response({
-            'error': 'Email and password required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Authenticate using email to find the user, then the user's username for the actual authentication.
-    # Django's authenticate() function expects a username.
-    try:
-        user = User.objects.get(email=email)
-        authenticated_user = authenticate(username=user.username, password=password)
-    except User.DoesNotExist:
-        authenticated_user = None
-
-    if authenticated_user is not None:
-        token, created = Token.objects.get_or_create(user=authenticated_user)
-        return Response({
-            'token': token.key,
-            'user_id': authenticated_user.pk,
-            'username': authenticated_user.username,
-            'email': authenticated_user.email
-        }, status=status.HTTP_200_OK)
-    else:
-        # User not found or password was incorrect
-        return Response({
-            'error': 'Invalid credentials'
-        }, status=status.HTTP_401_UNAUTHORIZED)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
