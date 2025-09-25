@@ -1,45 +1,24 @@
 
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
-// --- SVG Icon Components ---
-const BrainIcon = () => (
-  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9.5 3.5c1.14 0 2.28.38 3.24 1.1a6.5 6.5 0 0 1 5.26 6.4v2a6.5 6.5 0 0 1-6.5 6.5h-1a6.5 6.5 0 0 1-6.5-6.5v-2A6.5 6.5 0 0 1 9.5 3.5z" />
-    <path d="M14.5 3.5c1.14 0 2.28.38 3.24 1.1" />
-    <path d="M12 13a2.5 2.5 0 0 0-2.5 2.5V18" />
-    <path d="M12 13a2.5 2.5 0 0 1 2.5 2.5V18" />
-    <path d="M12 3V1" />
-    <path d="M9.5 21v-2.5" />
-    <path d="M14.5 21v-2.5" />
-  </svg>
-);
-
-const CrossIcon = () => (
-  <svg className="icon" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M13 3h-2v5H6v2h5v11h2V10h5V8h-5z" />
-  </svg>
-);
-
-const CrescentIcon = () => (
-  <svg className="icon" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12.28.43A11.5 11.5 0 0 0 3.8 17.8a11.5 11.5 0 0 0 14.98 3.77 11.5 11.5 0 0 0 3.77-14.98A11.5 11.5 0 0 0 12.28.43zm5.4 17.5a9.5 9.5 0 0 1-12.8-10.45 9.5 9.5 0 0 1 10.44-2.34A9.5 9.5 0 0 1 17.68 18z"/>
-    <path d="M15.5 8.5l-1.5 3 3 1.5-1.5 3-3-1.5-3 1.5 1.5-3-3-1.5 3-1.5 1.5-3 1.5 3z"/>
-  </svg>
-);
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import JournalPage from './pages/JournalPage';
 
 // --- Background Particle Component ---
 const ParticleContainer = () => {
   const particles = Array.from({ length: 30 }).map((_, i) => {
-    const size = Math.random() * 5 + 2; // 2px to 7px
+    const size = Math.random() * 5 + 2;
     const style = {
       width: `${size}px`,
       height: `${size}px`,
       left: `${Math.random() * 100}vw`,
-      animationDuration: `${Math.random() * 15 + 15}s`, // 15s to 30s
-      animationDelay: `${Math.random() * -30}s`, // Start at random points
-      '--x-start': `${Math.random() * 100 - 50}vw`, // Random horizontal start offset
-      '--x-end': `${Math.random() * 100 - 50}vw`,     // Random horizontal end offset
+      animationDuration: `${Math.random() * 15 + 15}s`,
+      animationDelay: `${Math.random() * -30}s`,
+      '--x-start': `${Math.random() * 100 - 50}vw`,
+      '--x-end': `${Math.random() * 100 - 50}vw`,
       '--scale': Math.random() + 0.5,
     };
     return <div key={i} className="particle" style={style} />;
@@ -48,113 +27,47 @@ const ParticleContainer = () => {
   return <div id="particle-container">{particles}</div>;
 };
 
+// --- Theme Toggle Component ---
+const ThemeToggle = ({ theme, toggleTheme }) => (
+  <div className="theme-toggle" onClick={toggleTheme}>
+    <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
+    <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
+  </div>
+);
 
-// --- Mock Insight Functions ---
-const getMockPsychologicalInsight = (text) => {
-  if (!text.trim()) return null;
-  return {
-    type: 'psychological',
-    title: "Psychological Insight",
-    content: "It sounds like you're facing a significant challenge. Acknowledging your feelings is a great first step. Remember to be kind to yourself. Breaking down the problem into smaller, manageable steps can often make it feel less overwhelming.",
-  };
-};
-
-const getMockBiblicalInsight = () => ({
-  type: 'biblical',
-  title: "Biblical Insight",
-  content: "Come to me, all you who are weary and burdened, and I will give you rest.",
-  cite: "Matthew 11:28"
-});
-
-const getMockIslamicInsight = () => ({
-  type: 'islamic',
-  title: "Islamic Insight",
-  content: "And whoever fears Allah - He will make for him a way out. And will provide for him from where he does not expect.",
-  cite: "Quran 65:2-3"
-});
-
-// --- Icon Mapping ---
-const InsightIcons = {
-  psychological: <BrainIcon />,
-  biblical: <CrossIcon />,
-  islamic: <CrescentIcon />,
-};
-
-
+// --- Main App Component ---
 function App() {
-  const [entry, setEntry] = useState("");
-  const [insights, setInsights] = useState([]);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const handleGetInsights = () => {
-    const psychoInsight = getMockPsychologicalInsight(entry);
-    if (psychoInsight) {
-      setInsights([psychoInsight]);
-    }
-  };
-
-  const handleShowSpiritual = (type) => {
-    const newInsight = type === 'biblical' ? getMockBiblicalInsight() : getMockIslamicInsight();
-    setInsights(prev => [...prev, newInsight]);
-  };
-  
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  }
+  };
 
-  const hasShownSpiritualOptions = insights.length > 1;
+  // A mock function to simulate login
+  const login = () => setIsAuthenticated(true);
+  // A mock function to simulate logout
+  const logout = () => setIsAuthenticated(false);
 
   return (
-    <>
+    <Router>
       <ParticleContainer />
-      <div className="theme-toggle" onClick={toggleTheme}>
-         <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
-         <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
-      </div>
-
-      <div className="app-container">
-        <main className="journal-entry-card">
-          <h1>SoulLog</h1>
-          <p>Your safe space to reflect, understand, and grow.</p>
-          <textarea
-            placeholder="What's on your mind?"
-            value={entry}
-            onChange={(e) => setEntry(e.target.value)}
-          />
-          <button className="insight-button" onClick={handleGetInsights} disabled={!entry.trim()}>
-            Get Insights
-          </button>
-        </main>
-
-        <div className="insights-container">
-          {insights.map((insight, index) => (
-            <div key={index} className={`insight-card ${insight.type}`}>
-              <h2>{InsightIcons[insight.type]} {insight.title}</h2>
-              {insight.content && (insight.cite ? <blockquote>{insight.content}</blockquote> : <p>{insight.content}</p>)}
-              {insight.cite && <cite>— {insight.cite}</cite>}
-
-              {/* Show spiritual options only on the first card and if not already shown */}
-              {insight.type === 'psychological' && !hasShownSpiritualOptions && (
-                 <div className="spiritual-options">
-                    <button className="spiritual-button biblical" onClick={() => handleShowSpiritual('biblical')}>
-                       <CrossIcon /> View Biblical Insight
-                    </button>
-                    <button className="spiritual-button islamic" onClick={() => handleShowSpiritual('islamic')}>
-                      <CrescentIcon /> View Islamic Insight
-                    </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-      </div>
-    </>
+      <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+      
+      <Routes>
+        <Route path="/login" element={!isAuthenticated ? <LoginPage onLogin={login} /> : <Navigate to="/" />} />
+        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+        <Route 
+          path="/"
+          element={isAuthenticated ? <JournalPage onLogout={logout} /> : <Navigate to="/login" />}
+        />
+      </Routes>
+    </Router>
   );
 }
 
