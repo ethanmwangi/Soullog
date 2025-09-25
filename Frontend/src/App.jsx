@@ -1,3 +1,4 @@
+// Frontend/src/App.jsx
 
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -38,21 +39,50 @@ const ThemeToggle = ({ theme, toggleTheme }) => (
 // --- Main App Component ---
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Mock auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  // Check if user is already logged in on app load
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // TODO: Validate token with backend
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // A mock function to simulate login
-  const login = () => setIsAuthenticated(true);
-  // A mock function to simulate logout
-  const logout = () => setIsAuthenticated(false);
+  // Login function
+  const login = () => {
+    setIsAuthenticated(true);
+  };
+
+  // Logout function
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userEmail');
+    setIsAuthenticated(false);
+  };
+
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="app-container">
+        <div className="journal-entry-card">
+          <h1>Loading...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -60,8 +90,14 @@ function App() {
       <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
       
       <Routes>
-        <Route path="/login" element={!isAuthenticated ? <LoginPage onLogin={login} /> : <Navigate to="/" />} />
-        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} />
+        <Route 
+          path="/login" 
+          element={!isAuthenticated ? <LoginPage onLogin={login} /> : <Navigate to="/" />} 
+        />
+        <Route 
+          path="/register" 
+          element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/" />} 
+        />
         <Route 
           path="/"
           element={isAuthenticated ? <JournalPage onLogout={logout} /> : <Navigate to="/login" />}
