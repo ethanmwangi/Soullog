@@ -1,108 +1,138 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
-// --- Mock Data and Functions ---
-// In a real app, this would come from your backend AI service
+// --- SVG Icon Components ---
+const BrainIcon = () => (
+  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.5 3.5c1.14 0 2.28.38 3.24 1.1a6.5 6.5 0 0 1 5.26 6.4v2a6.5 6.5 0 0 1-6.5 6.5h-1a6.5 6.5 0 0 1-6.5-6.5v-2A6.5 6.5 0 0 1 9.5 3.5z" />
+    <path d="M14.5 3.5c1.14 0 2.28.38 3.24 1.1" />
+    <path d="M12 13a2.5 2.5 0 0 0-2.5 2.5V18" />
+    <path d="M12 13a2.5 2.5 0 0 1 2.5 2.5V18" />
+    <path d="M12 3V1" />
+    <path d="M9.5 21v-2.5" />
+    <path d="M14.5 21v-2.5" />
+  </svg>
+);
+
+const CrossIcon = () => (
+  <svg className="icon" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M13 3h-2v5H6v2h5v11h2V10h5V8h-5z" />
+  </svg>
+);
+
+const CrescentIcon = () => (
+  <svg className="icon" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12.28.43A11.5 11.5 0 0 0 3.8 17.8a11.5 11.5 0 0 0 14.98 3.77 11.5 11.5 0 0 0 3.77-14.98A11.5 11.5 0 0 0 12.28.43zm5.4 17.5a9.5 9.5 0 0 1-12.8-10.45 9.5 9.5 0 0 1 10.44-2.34A9.5 9.5 0 0 1 17.68 18z"/>
+    <path d="M15.5 8.5l-1.5 3 3 1.5-1.5 3-3-1.5-3 1.5 1.5-3-3-1.5 3-1.5 1.5-3 1.5 3z"/>
+  </svg>
+);
+
+// --- Mock Insight Functions ---
 const getMockPsychologicalInsight = (text) => {
   if (!text.trim()) return null;
   return {
+    type: 'psychological',
     title: "Psychological Insight",
-    icon: "🧠",
     content: "It sounds like you're facing a significant challenge. Acknowledging your feelings is a great first step. Remember to be kind to yourself. Breaking down the problem into smaller, manageable steps can often make it feel less overwhelming.",
   };
 };
 
 const getMockBiblicalInsight = () => ({
+  type: 'biblical',
   title: "Biblical Insight",
-  icon: "📖",
   content: "Come to me, all you who are weary and burdened, and I will give you rest.",
   cite: "Matthew 11:28"
 });
 
 const getMockIslamicInsight = () => ({
+  type: 'islamic',
   title: "Islamic Insight",
-  icon: "🕌",
   content: "And whoever fears Allah - He will make for him a way out. And will provide for him from where he does not expect.",
   cite: "Quran 65:2-3"
 });
 
+// --- Icon Mapping ---
+const InsightIcons = {
+  psychological: <BrainIcon />,
+  biblical: <CrossIcon />,
+  islamic: <CrescentIcon />,
+};
+
 
 function App() {
   const [entry, setEntry] = useState("");
-  const [psychologicalInsight, setPsychologicalInsight] = useState(null);
-  const [biblicalInsight, setBiblicalInsight] = useState(null);
-  const [islamicInsight, setIslamicInsight] = useState(null);
+  const [insights, setInsights] = useState([]);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const handleGetInsights = () => {
-    // Reset previous insights
-    setBiblicalInsight(null);
-    setIslamicInsight(null);
-
-    // Get new psychological insight
-    const insight = getMockPsychologicalInsight(entry);
-    setPsychologicalInsight(insight);
+    const psychoInsight = getMockPsychologicalInsight(entry);
+    if (psychoInsight) {
+      setInsights([psychoInsight]);
+    }
   };
 
-  const handleShowBiblical = () => {
-    setBiblicalInsight(getMockBiblicalInsight());
+  const handleShowSpiritual = (type) => {
+    const newInsight = type === 'biblical' ? getMockBiblicalInsight() : getMockIslamicInsight();
+    setInsights(prev => [...prev, newInsight]);
   };
+  
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }
 
-  const handleShowIslamic = () => {
-    setIslamicInsight(getMockIslamicInsight());
-  };
+  const hasShownSpiritualOptions = insights.length > 1;
 
   return (
-    <div className="app-container">
-      <main className="journal-entry-card">
-        <h1>SoulLog</h1>
-        <p>Your safe space to reflect, understand, and grow.</p>
-        <textarea
-          placeholder="What's on your mind?"
-          value={entry}
-          onChange={(e) => setEntry(e.target.value)}
-        />
-        <button className="insight-button" onClick={handleGetInsights} disabled={!entry.trim()}>
-          Get Insights
-        </button>
-      </main>
+    <>
+      <div className="theme-toggle" onClick={toggleTheme}>
+         <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
+         <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
+      </div>
 
-      {psychologicalInsight && (
-        <section className="insights-container">
-          <div className="insight-card psychological">
-            <h2><span className="icon">{psychologicalInsight.icon}</span> {psychologicalInsight.title}</h2>
-            <p>{psychologicalInsight.content}</p>
-            
-            {!biblicalInsight && !islamicInsight && (
-               <div className="spiritual-options">
-                  <button className="spiritual-button biblical" onClick={handleShowBiblical}>
-                    <span className="icon">📖</span> View Biblical Insight
-                  </button>
-                  <button className="spiritual-button islamic" onClick={handleShowIslamic}>
-                    <span className="icon">🕌</span> View Islamic Insight
-                  </button>
-              </div>
-            )}
-          </div>
+      <div className="app-container">
+        <main className="journal-entry-card">
+          <h1>SoulLog</h1>
+          <p>Your safe space to reflect, understand, and grow.</p>
+          <textarea
+            placeholder="What's on your mind?"
+            value={entry}
+            onChange={(e) => setEntry(e.target.value)}
+          />
+          <button className="insight-button" onClick={handleGetInsights} disabled={!entry.trim()}>
+            Get Insights
+          </button>
+        </main>
 
-          {biblicalInsight && (
-            <div className="insight-card biblical">
-              <h2><span className="icon">{biblicalInsight.icon}</span> {biblicalInsight.title}</h2>
-              <blockquote>{biblicalInsight.content}</blockquote>
-              <cite>— {biblicalInsight.cite}</cite>
+        <div className="insights-container">
+          {insights.map((insight, index) => (
+            <div key={index} className={`insight-card ${insight.type}`}>
+              <h2>{InsightIcons[insight.type]} {insight.title}</h2>
+              {insight.content && (insight.cite ? <blockquote>{insight.content}</blockquote> : <p>{insight.content}</p>)}
+              {insight.cite && <cite>— {insight.cite}</cite>}
+
+              {/* Show spiritual options only on the first card and if not already shown */}
+              {insight.type === 'psychological' && !hasShownSpiritualOptions && (
+                 <div className="spiritual-options">
+                    <button className="spiritual-button biblical" onClick={() => handleShowSpiritual('biblical')}>
+                       <CrossIcon /> View Biblical Insight
+                    </button>
+                    <button className="spiritual-button islamic" onClick={() => handleShowSpiritual('islamic')}>
+                      <CrescentIcon /> View Islamic Insight
+                    </button>
+                </div>
+              )}
             </div>
-          )}
+          ))}
+        </div>
 
-          {islamicInsight && (
-            <div className="insight-card islamic">
-              <h2><span className="icon">{islamicInsight.icon}</span> {islamicInsight.title}</h2>
-              <blockquote>{islamicInsight.content}</blockquote>
-              <cite>— {islamicInsight.cite}</cite>
-            </div>
-          )}
-        </section>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 

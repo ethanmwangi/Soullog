@@ -9,6 +9,20 @@
   --accent-emerald: #4a9b8f;
   --white: #ffffff;
   --shadow: rgba(0, 0, 0, 0.1);
+  --border-color: #e0e0e0;
+}
+
+[data-theme='dark'] {
+  --background-start: #2d2d2d;
+  --background-end: #1a1a1a;
+  --text-primary: #f5f5f5;
+  --text-secondary: #aaaaaa;
+  --accent-gold: #e0c5a3;
+  --accent-purple: #b092c2;
+  --accent-emerald: #75c5b9;
+  --white: #3a3a3a;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --border-color: #4a4a4a;
 }
 
 body {
@@ -17,9 +31,11 @@ body {
   color: var(--text-primary);
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; /* Align to top */
   min-height: 100vh;
   margin: 0;
+  padding-top: 4rem; /* Add padding for theme toggle */
+  transition: background 0.3s, color 0.3s;
 }
 
 .app-container {
@@ -34,6 +50,7 @@ body {
   box-shadow: 0 8px 24px var(--shadow);
   padding: 2.5rem;
   text-align: center;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 h1 {
@@ -52,13 +69,16 @@ textarea {
   width: 100%;
   min-height: 200px;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   padding: 1.5rem;
   font-size: 1.1rem;
   line-height: 1.6;
   resize: vertical;
   margin-bottom: 2rem;
   box-sizing: border-box; /* Ensures padding is included in the width */
+  background: var(--background-start);
+  color: var(--text-primary);
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
 }
 
 textarea:focus {
@@ -69,7 +89,7 @@ textarea:focus {
 
 .insight-button {
   background: linear-gradient(135deg, var(--accent-gold), #b38e5d);
-  color: var(--white);
+  color: #fff;
   border: none;
   border-radius: 12px;
   padding: 1rem 2rem;
@@ -85,18 +105,28 @@ textarea:focus {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
+
+/* --- Insight Animations & Styles --- */
 .insights-container {
-  margin-top: 3rem;
-  text-align: left;
+  margin-top: 1rem;
+  perspective: 1000px;
+}
+
+@keyframes unfold { 
+  0% { transform: rotateX(-90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
 }
 
 .insight-card {
   background: var(--white);
   border-radius: 12px;
   padding: 2rem;
-  margin-bottom: 2rem;
+  margin: 1.5rem 0;
   border-left: 5px solid;
   box-shadow: 0 4px 12px var(--shadow);
+  transform-origin: top center;
+  animation: unfold 0.6s ease-out forwards;
+  transition: background 0.3s, box-shadow 0.3s;
 }
 
 .insight-card.psychological {
@@ -114,13 +144,10 @@ textarea:focus {
 h2 {
   font-size: 1.5rem;
   font-weight: 500;
+  margin-top: 0;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
-}
-
-.insight-card .icon {
-  margin-right: 0.75rem;
 }
 
 .spiritual-options {
@@ -132,7 +159,7 @@ h2 {
 .spiritual-button {
   flex-grow: 1;
   background: none;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 1rem;
   font-size: 1rem;
@@ -141,7 +168,8 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .spiritual-button.biblical:hover {
@@ -156,10 +184,10 @@ h2 {
 
 blockquote {
   font-style: italic;
-  color: #555;
+  color: var(--text-secondary);
   margin: 1rem 0;
   padding-left: 1.5rem;
-  border-left: 3px solid #e0e0e0;
+  border-left: 3px solid var(--border-color);
 }
 
 cite {
@@ -168,5 +196,43 @@ cite {
   font-style: normal;
   font-weight: 500;
   color: var(--text-secondary);
+}
+
+
+/* --- Custom Icons --- */
+.icon {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  margin-right: 0.75rem;
+  fill: currentColor;
+}
+
+/* --- Theme Toggle --- */
+.theme-toggle {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.toggle-button {
+  font-size: 1.2rem;
+  padding: 4px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.toggle-button.active {
+  background: var(--accent-gold);
+  color: white;
 }
 
