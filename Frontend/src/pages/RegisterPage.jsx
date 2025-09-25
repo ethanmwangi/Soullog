@@ -1,6 +1,8 @@
+// Frontend/src/pages/RegisterPage.jsx
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 import '../App.css';
 
 function RegisterPage() {
@@ -9,18 +11,34 @@ function RegisterPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    // TODO: Add actual registration logic here
-    console.log("Registering with:", { username, email, password });
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      // Call Django API
+      const response = await authAPI.register({
+        username,
+        email,
+        password
+      });
+
+      // Store token and redirect
+      localStorage.setItem('authToken', response.token);
+      console.log('Registration successful:', response);
+      
+      // Redirect to login or directly to app
+      navigate('/login');
+      
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.error || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
-      // Replace with actual navigation upon success
-    }, 1000);
+    }
   };
 
   return (
@@ -49,9 +67,10 @@ function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength="6"
           />
           <button className="auth-button" type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating...' : 'Create Account'}
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
           {error && <p className="error-message">{error}</p>}
         </form>
