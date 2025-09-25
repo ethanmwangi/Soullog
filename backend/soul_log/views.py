@@ -4,12 +4,14 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate # Added for login
 from django.shortcuts import get_object_or_404
 from django.db import models
 import json
 import re
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny # Added for login
 
 from .models import UserProfile, JournalEntry, InsightTemplate, GeneratedInsight
 from .serializers import (
@@ -36,6 +38,40 @@ class UserRegistrationView(generics.CreateAPIView):
             'email': user.email
         }, status=status.HTTP_201_CREATED)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    """Login user and return token"""
+    email = request.data.get('email')
+    password = request.data.get('password')
+    
+    if not email or not password:
+        return Response({
+            'error': 'Email and password required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Authenticate using email to find the user, then the user's username for the actual authentication.
+    # Django's authenticate() function expects a username.
+    try:
+        user = User.objects.get(email=email)
+        authenticated_user = authenticate(username=user.username, password=password)
+    except User.DoesNotExist:
+        authenticated_user = None
+
+    if authenticated_user is not None:
+        token, created = Token.objects.get_or_create(user=authenticated_user)
+        return Response({
+            'token': token.key,
+            'user_id': authenticated_user.pk,
+            'username': authenticated_user.username,
+            'email': authenticated_user.email
+        }, status=status.HTTP_200_OK)
+    else:
+        # User not found or password was incorrect
+        return Response({
+            'error': 'Invalid credentials'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -57,54 +93,6 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
         journal_entry = serializer.save(user=self.request.user)
         self.analyze_and_generate_insights(journal_entry)
     
-    # Commented out: Simple TextBlob fallback (no longer needed with Hugging Face)
-    # def analyze_entry_simple(self, journal_entry):
-    #     """Quick analysis without AI (fallback if needed)"""
-    #     content = journal_entry.content.lower()
-    #     blob = TextBlob(journal_entry.content)
-    #     sentiment_score = blob.sentiment.polarity
-    #     
-    #     journal_entry.sentiment_score = sentiment_score
-    #     journal_entry.keywords = ','.join(content.split()[:5])
-    #     journal_entry.save()
-    #     
-    #     user_profile, created = UserProfile.objects.get_or_create(
-    #         user=journal_entry.user,
-    #         defaults={'prefer_biblical': True, 'prefer_islamic': True, 'prefer_psychological': True}
-    #     )
-    #     
-    #     if sentiment_score < -0.2:
-    #         psych_content = "I notice you might be going through a challenging time. Remember that difficult emotions are temporary and it's okay to seek support."
-    #     elif sentiment_score > 0.2:
-    #         psych_content = "It's wonderful to see positive emotions in your reflection! Take a moment to appreciate what's going well in your life."
-    #     else:
-    #         psych_content = "Your reflection shows emotional balance. This is a good time for self-reflection and planning ahead."
-    #     
-    #     GeneratedInsight.objects.create(
-    #         journal_entry=journal_entry,
-    #         insight_type='psychological',
-    #         title="Personal Reflection",
-    #         content=psych_content
-    #     )
-    #     
-    #     if user_profile.prefer_biblical:
-    #         GeneratedInsight.objects.create(
-    #             journal_entry=journal_entry,
-    #             insight_type='biblical',
-    #             title="God's Peace",
-    #             content="Remember that God is with you in all circumstances. Cast your cares upon Him, for He cares for you.",
-    #             scripture_reference="'Cast all your anxiety on him because he cares for you.' - 1 Peter 5:7"
-    #         )
-    #     
-    #     if user_profile.prefer_islamic:
-    #         GeneratedInsight.objects.create(
-    #             journal_entry=journal_entry,
-    #             insight_type='islamic',
-    #             title="Trust in Allah",
-    #             content="Allah knows what is best for you. Trust in His wisdom and find peace in His guidance.",
-    #             scripture_reference="'And Allah is the best of planners.' - Quran 8:30"
-    #         )
-    
     def analyze_and_generate_insights(self, journal_entry):
         """Analyze journal entry and generate AI insights using Hugging Face"""
         user_profile, created = UserProfile.objects.get_or_create(
@@ -125,26 +113,23 @@ class JournalEntryListCreateView(generics.ListCreateAPIView):
         ai_service = AIInsightService()
         analysis = ai_service.analyze_journal_entry(journal_entry.content, preferences)
         
-        # Error handling: If analysis contains an error key, stop processing
         if analysis and "error" in analysis:
             print(f"Could not generate AI insights for entry {journal_entry.id}: {analysis['error']}")
             return
         
         if analysis:
-            # Save core analysis to journal entry
             journal_entry.sentiment_score = analysis.get('sentiment_score', 0)
             journal_entry.keywords = ','.join(analysis.get('keywords', []))
-            journal_entry.detected_emotions = json.dumps(analysis.get('emotions', []))  # HF returns 'emotions'; map to model field
+            journal_entry.detected_emotions = json.dumps(analysis.get('emotions', []))
             journal_entry.save()
             
-            # Create insights from the list (dynamic based on type)
             for insight_data in analysis.get('insights', []):
                 GeneratedInsight.objects.create(
                     journal_entry=journal_entry,
-                    insight_type=insight_data.get('type', 'psychological'),  # e.g., 'psychological', 'biblical', 'islamic'
+                    insight_type=insight_data.get('type', 'psychological'),
                     title=insight_data.get('title', 'Generated Insight'),
                     content=insight_data.get('content', ''),
-                    scripture_reference=insight_data.get('scripture_reference', '')  # Optional; empty if not in HF output
+                    scripture_reference=insight_data.get('scripture_reference', '')
                 )
 
 class JournalEntryDetailView(generics.RetrieveUpdateDestroyAPIView):
