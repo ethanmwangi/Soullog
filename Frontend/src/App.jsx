@@ -33,17 +33,11 @@ const ParticleContainer = () => {
   return <div id="particle-container">{particles}</div>;
 };
 
-const ThemeToggle = ({ theme, toggleTheme }) => (
-  <div className="theme-toggle" onClick={toggleTheme}>
-    <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
-    <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
-  </div>
-);
 
 // --- Layout for authenticated users ---
-const LoggedInLayout = ({ user, onLogout }) => (
+const LoggedInLayout = ({ user, onLogout, theme, toggleTheme }) => (
   <div className="main-layout">
-    <Navbar user={user} onLogout={onLogout} />
+    <Navbar user={user} onLogout={onLogout} theme={theme} toggleTheme={toggleTheme} />
     <main className="content-wrap">
       <Outlet context={{ user }} />
     </main>
@@ -98,12 +92,11 @@ function App() {
   return (
     <Router>
       <ParticleContainer />
-      <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
       
       <Routes>
         {user ? (
           // --- Logged IN Routes ---
-          <Route element={<LoggedInLayout user={user} onLogout={handleLogout} />}>
+          <Route element={<LoggedInLayout user={user} onLogout={handleLogout} theme={theme} toggleTheme={toggleTheme} />}>
             <Route path="/" element={<JournalPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/insights" element={<InsightsPage />} />

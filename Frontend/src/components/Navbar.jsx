@@ -8,11 +8,17 @@ const Avatar = ({ username, onClick }) => {
   return <div className="avatar" onClick={onClick} style={{ cursor: 'pointer' }}>{initial}</div>;
 };
 
-function Navbar({ user, onLogout }) {
+const ThemeToggle = ({ theme, toggleTheme }) => (
+  <div className="theme-toggle" onClick={toggleTheme}>
+    <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
+    <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
+  </div>
+);
+
+function Navbar({ user, onLogout, theme, toggleTheme }) {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown if clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -36,9 +42,9 @@ function Navbar({ user, onLogout }) {
         </div>
       </div>
       <div className="navbar-right" ref={dropdownRef}>
+        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
         <div className="user-info">
           <Avatar username={user.username} onClick={() => setDropdownVisible(!dropdownVisible)} />
-          <span>{user.username}</span>
         </div>
         {dropdownVisible && (
           <div className="logout-dropdown">
