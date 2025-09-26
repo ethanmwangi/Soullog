@@ -17,7 +17,6 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      console.log('Attaching token to request:', token); // DEBUG LOG
       config.headers.Authorization = `Token ${token}`;
     }
     return config;
@@ -34,7 +33,6 @@ export const authAPI = {
     try {
       const response = await api.post('/auth/register/', userData);
       if (response.data.token) {
-        console.log('Registration successful, token received:', response.data.token); // DEBUG LOG
         localStorage.setItem('authToken', response.data.token);
       }
       return response.data;
@@ -48,7 +46,6 @@ export const authAPI = {
     try {
       const response = await api.post('/auth/login/', credentials);
       if (response.data.token) {
-        console.log('Login successful, token received:', response.data.token); // DEBUG LOG
         localStorage.setItem('authToken', response.data.token);
       }
       return response.data;
