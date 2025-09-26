@@ -31,12 +31,12 @@ body {
   color: var(--text-primary);
   display: flex;
   justify-content: center;
-  align-items: center; /* Center content vertically */
+  align-items: flex-start; /* Center content vertically */
   min-height: 100vh;
   margin: 0;
+  padding: 2rem 0;
   transition: background 0.3s, color 0.3s;
-  overflow: hidden; /* Hide scrollbars from particles */
-}
+  
 
 .app-container {
   width: 100%;
