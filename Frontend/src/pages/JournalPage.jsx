@@ -1,4 +1,3 @@
-// Frontend/src/pages/JournalPage.jsx
 
 import { useState, useEffect } from 'react';
 import { journalAPI } from '../services/api';
@@ -30,68 +29,105 @@ const CrescentIcon = () => (
   </svg>
 );
 
-// --- Icon Mapping ---
 const InsightIcons = {
   psychological: <BrainIcon />,
   biblical: <CrossIcon />,
   islamic: <CrescentIcon />,
 };
 
-function JournalPage() { // Removed onLogout prop
+function JournalPage() {
   const [entry, setEntry] = useState("");
   const [title, setTitle] = useState("");
   const [moodRating, setMoodRating] = useState(3);
   const [insights, setInsights] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [recentEntries, setRecentEntries] = useState([]);
+  const [allEntries, setAllEntries] = useState([]);
+  const [editingEntry, setEditingEntry] = useState(null); // State to track the entry being edited
 
-  // Load recent entries on component mount
+  // Load all entries on component mount
   useEffect(() => {
-    loadRecentEntries();
+    loadAllEntries();
   }, []);
 
-  const loadRecentEntries = async () => {
+  const loadAllEntries = async () => {
     try {
       const entries = await journalAPI.getEntries();
-      setRecentEntries(entries.slice(0, 5)); // Show last 5 entries
+      // Sort entries by date, newest first
+      entries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setAllEntries(entries);
     } catch (err) {
       console.error('Failed to load entries:', err);
+      setError('Could not load your journal entries.');
     }
   };
+  
+  // Resets the form to its initial state
+  const resetForm = () => {
+    setTitle("");
+    setEntry("");
+    setMoodRating(3);
+    setEditingEntry(null);
+    setInsights([]);
+    setError(null);
+  };
 
-  const handleGetInsights = async () => {
+  // Handles submission for both creating a new entry and updating an existing one
+  const handleSubmit = async () => {
     if (!entry.trim()) return;
     
     setIsLoading(true);
     setError(null);
-    setInsights([]);
+
+    const journalData = {
+      title: title || `Journal Entry - ${new Date().toLocaleDateString()}`,
+      content: entry,
+      mood_rating: moodRating
+    };
 
     try {
-      const journalData = {
-        title: title || `Journal Entry - ${new Date().toLocaleDateString()}`,
-        content: entry,
-        mood_rating: moodRating
-      };
-
-      const response = await journalAPI.createEntry(journalData);
-      
-      if (response.insights && response.insights.length > 0) {
-        setInsights(response.insights);
+      if (editingEntry) {
+        // --- UPDATE --- //
+        await journalAPI.updateEntry(editingEntry.id, journalData);
       } else {
-        setError('No insights were generated. Please try again.');
+        // --- CREATE --- //
+        const response = await journalAPI.createEntry(journalData);
+        if (response.insights && response.insights.length > 0) {
+          setInsights(response.insights);
+        } else {
+          setInsights([]); // Clear any previous insights
+        }
       }
-
-      setEntry("");
-      setTitle("");
-      setMoodRating(3);
-      loadRecentEntries();
-      
+      resetForm();
+      await loadAllEntries(); // Refresh the list of entries
     } catch (err) {
-      console.error('Failed to create entry:', err);
-      setError(err.error || 'Failed to create journal entry. Please try again.');
+      console.error('Failed to save entry:', err);
+      setError(err.error || 'Failed to save the journal entry. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Prepares the form for editing an existing entry
+  const handleStartEdit = (entryToEdit) => {
+    setEditingEntry(entryToEdit);
+    setTitle(entryToEdit.title);
+    setEntry(entryToEdit.content);
+    setMoodRating(entryToEdit.mood_rating);
+    setInsights([]); // Clear any generated insights from the form
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to see the form
+  };
+
+  // Deletes an entry after user confirmation
+  const handleDelete = async (entryId) => {
+    if (window.confirm('Are you sure you want to permanently delete this entry?')) {
+      try {
+        await journalAPI.deleteEntry(entryId);
+        await loadAllEntries(); // Refresh the list
+      } catch (err) {
+        console.error('Failed to delete entry:', err);
+        setError('Could not delete the entry. Please try again.');
+      }
     }
   };
 
@@ -114,9 +150,8 @@ function JournalPage() { // Removed onLogout prop
   return (
     <>
       <main className="journal-entry-card">
-        {/* The old logout button has been removed from here */}
-        <h1>SoulLog</h1>
-        <p>Your safe space to reflect, understand, and grow.</p>
+        <h1>{editingEntry ? 'Edit Journal Entry' : 'SoulLog'}</h1>
+        <p>{editingEntry ? 'Update your thoughts and feelings below.' : 'Your safe space to reflect, understand, and grow.'}</p>
         
         <input
           type="text"
@@ -166,33 +201,33 @@ function JournalPage() { // Removed onLogout prop
           </div>
         </div>
         
-        <button 
-          className="insight-button" 
-          onClick={handleGetInsights} 
-          disabled={!entry.trim() || isLoading}
-          style={{
-            opacity: (!entry.trim() || isLoading) ? 0.6 : 1,
-            cursor: (!entry.trim() || isLoading) ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {isLoading ? 'Generating Insights...' : 'Get AI Insights'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <button 
+            className="insight-button" 
+            onClick={handleSubmit} 
+            disabled={!entry.trim() || isLoading}
+          >
+            {isLoading ? (editingEntry ? 'Updating...' : 'Generating...') : (editingEntry ? 'Update Entry' : 'Get AI Insights')}
+          </button>
+          {editingEntry && (
+            <button
+              type="button"
+              className="cancel-button"
+              onClick={resetForm}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
         
         {error && (
-          <div style={{ 
-            color: '#d9534f', 
-            marginTop: '1rem', 
-            padding: '1rem', 
-            background: '#fdf2f2', 
-            borderRadius: '8px',
-            border: '1px solid #f5c6cb'
-          }}>
+          <div className="error-message" style={{ marginTop: '1rem' }}>
             {error}
           </div>
         )}
       </main>
 
-      {/* Display Real AI Insights */}
       <div className="insights-container">
         {insights.map((insight, index) => (
           <div 
@@ -209,43 +244,44 @@ function JournalPage() { // Removed onLogout prop
         ))}
       </div>
 
-      {/* Show Recent Entries */}
-      {recentEntries.length > 0 && (
+      {allEntries.length > 0 && (
         <div style={{ marginTop: '2rem' }}>
           <h3 style={{ color: 'var(--text-secondary)', textAlign: 'center', marginBottom: '1rem' }}>
-            Recent Entries
+            My Journal Entries
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {recentEntries.map(entryItem => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {allEntries.map(entryItem => (
               <div 
                 key={entryItem.id}
                 style={{
                   background: 'var(--white)',
                   padding: '1rem',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   boxShadow: '0 2px 8px var(--shadow)',
-                  border: '1px solid var(--border-color)'
+                  border: '1px solid var(--border-color)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start'
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: 0, fontSize: '1rem' }}>
+                <div style={{ flexGrow: 1 }}>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem' }}>
                     {entryItem.title || 'Untitled Entry'}
                   </h4>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.5rem', display: 'block' }}>
                     {new Date(entryItem.created_at).toLocaleDateString()}
                   </span>
+                  <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    {entryItem.content.length > 150 
+                      ? entryItem.content.substring(0, 150) + '...' 
+                      : entryItem.content
+                    }
+                  </p>
                 </div>
-                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                  {entryItem.content.length > 100 
-                    ? entryItem.content.substring(0, 100) + '...' 
-                    : entryItem.content
-                  }
-                </p>
-                {entryItem.insights && entryItem.insights.length > 0 && (
-                  <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--accent-gold)' }}>
-                    {entryItem.insights.length} insight{entryItem.insights.length !== 1 ? 's' : ''} generated
-                  </div>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: '1rem' }}>
+                   <button className="edit-button" onClick={() => handleStartEdit(entryItem)}>Edit</button>
+                   <button className="delete-button" onClick={() => handleDelete(entryItem.id)}>Delete</button>
+                </div>
               </div>
             ))}
           </div>
