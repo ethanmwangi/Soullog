@@ -2,7 +2,6 @@
 
 import axios from 'axios';
 
-// Base API configuration
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 const api = axios.create({
@@ -12,13 +11,18 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests if available
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
+    console.log('Interceptor: Retrieved token:', token);
+
     if (token) {
       config.headers.Authorization = `Token ${token}`;
+      console.log('Interceptor: Authorization header set:', config.headers.Authorization);
+    } else {
+      console.log('Interceptor: No token found in localStorage.');
     }
+    
     return config;
   },
   (error) => {
@@ -26,13 +30,12 @@ api.interceptors.request.use(
   }
 );
 
-// Auth API functions
 export const authAPI = {
-  // Register new user
   register: async (userData) => {
     try {
       const response = await api.post('/auth/register/', userData);
       if (response.data.token) {
+        console.log('Register success: Token received and stored.');
         localStorage.setItem('authToken', response.data.token);
       }
       return response.data;
@@ -41,11 +44,11 @@ export const authAPI = {
     }
   },
 
-  // Login user  
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login/', credentials);
       if (response.data.token) {
+        console.log('Login success: Token received and stored.');
         localStorage.setItem('authToken', response.data.token);
       }
       return response.data;
@@ -54,7 +57,6 @@ export const authAPI = {
     }
   },
 
-  // Get current user info
   getCurrentUser: async () => {
     try {
       const response = await api.get('/auth/me/');
@@ -64,21 +66,18 @@ export const authAPI = {
     }
   },
 
-  // Logout
   logout: async () => {
     try {
       await api.post('/auth/logout/');
       localStorage.removeItem('authToken');
+      console.log('Logout: Token removed from localStorage.');
     } catch (error) {
-      // Even if API call fails, remove token locally
       localStorage.removeItem('authToken');
     }
   }
 };
 
-// Journal API functions
 export const journalAPI = {
-  // Create journal entry
   createEntry: async (entryData) => {
     try {
       const response = await api.post('/entries/', entryData);
@@ -88,7 +87,6 @@ export const journalAPI = {
     }
   },
 
-  // Get all entries
   getEntries: async () => {
     try {
       const response = await api.get('/entries/');
@@ -98,7 +96,6 @@ export const journalAPI = {
     }
   },
 
-  // Get dashboard stats
   getDashboardStats: async () => {
     try {
       const response = await api.get('/dashboard/');
