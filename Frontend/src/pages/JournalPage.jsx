@@ -120,7 +120,14 @@ function JournalPage({ onLogout }) {
   };
 
   return (
-    <div className="app-container">
+    <div 
+      className="app-container"
+      style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '2rem'
+      }}
+    >
       <main className="journal-entry-card">
         <button className="logout-button" onClick={onLogout}>Logout</button>
         <h1>SoulLog</h1>
