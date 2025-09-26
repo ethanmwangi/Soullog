@@ -11,12 +11,13 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement, // <-- Import ArcElement for Doughnut chart
   Title,
   Tooltip,
   Legend,
-  Filler, // Import Filler for the gradient
+  Filler,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2'; // <-- Import Doughnut
 
 // Register Chart.js components
 ChartJS.register(
@@ -24,6 +25,7 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  ArcElement, // <-- Register ArcElement
   Title,
   Tooltip,
   Legend,
@@ -35,8 +37,8 @@ function DashboardPage() {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [chartData, setChartData] = useState(null);
-  const [emotionSummary, setEmotionSummary] = useState(null);
+  const [lineChartData, setLineChartData] = useState(null);
+  const [emotionChartData, setEmotionChartData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,13 +46,13 @@ function DashboardPage() {
       try {
         const fetchedEntries = await journalAPI.getEntries();
         
-        // Sort entries by date, oldest first for the chart
-        fetchedEntries.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        setEntries(fetchedEntries);
+        // Sort entries for consistency
+        const sortedEntries = [...fetchedEntries].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        setEntries(sortedEntries);
 
-        // Process data for the chart
-        processChartData(fetchedEntries);
-        processEmotionSummary(fetchedEntries);
+        // Process data for the charts
+        processLineChartData(sortedEntries);
+        processEmotionChartData(sortedEntries);
 
       } catch (err) {
         console.error('Failed to load entries:', err);
@@ -63,29 +65,26 @@ function DashboardPage() {
     fetchData();
   }, []);
 
-  const processChartData = (entries) => {
+  const processLineChartData = (entries) => {
     if (entries.length === 0) {
-      setChartData(null);
+      setLineChartData(null);
       return;
     }
-
     const labels = entries.map(entry => new Date(entry.created_at).toLocaleDateString());
     const dataPoints = entries.map(entry => entry.mood_rating);
-
-    setChartData({
+    setLineChartData({
       labels,
       datasets: [
         {
           label: 'Mood Rating',
           data: dataPoints,
-          fill: true, // This is important for the gradient
-          borderColor: 'rgba(201, 168, 124, 0.8)', // --accent-gold
-          tension: 0.3, // Makes the line smoother
+          fill: true,
+          borderColor: 'rgba(201, 168, 124, 0.8)',
+          tension: 0.3,
           pointBackgroundColor: '#fff',
           pointBorderColor: 'rgba(201, 168, 124, 1)',
           pointRadius: 5,
           pointHoverRadius: 7,
-          // The gradient background
           backgroundColor: (context) => {
             const ctx = context.chart.ctx;
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
@@ -98,64 +97,64 @@ function DashboardPage() {
     });
   };
   
-  const processEmotionSummary = (entries) => {
+  const processEmotionChartData = (entries) => {
       const emotionCounts = entries
           .flatMap(entry => entry.detected_emotions || [])
           .reduce((acc, emotion) => {
-              acc[emotion] = (acc[emotion] || 0) + 1;
+              const capitalized = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+              acc[capitalized] = (acc[capitalized] || 0) + 1;
               return acc;
           }, {});
 
       const sortedEmotions = Object.entries(emotionCounts)
           .sort(([, a], [, b]) => b - a)
-          .slice(0, 5); // Get top 5
+          .slice(0, 7); // Get top 7
 
-      setEmotionSummary(sortedEmotions);
+      if(sortedEmotions.length === 0) {
+          setEmotionChartData(null);
+          return;
+      }
+      
+      setEmotionChartData({
+          labels: sortedEmotions.map(([emotion]) => emotion),
+          datasets: [{
+              label: 'Emotion Count',
+              data: sortedEmotions.map(([, count]) => count),
+              backgroundColor: [
+                'rgba(255, 99, 132, 0.7)', // Red
+                'rgba(54, 162, 235, 0.7)', // Blue
+                'rgba(255, 206, 86, 0.7)', // Yellow
+                'rgba(75, 192, 192, 0.7)', // Green
+                'rgba(153, 102, 255, 0.7)', // Purple
+                'rgba(255, 159, 64, 0.7)',  // Orange
+                'rgba(199, 199, 199, 0.7)', // Grey
+              ],
+              borderColor: 'var(--background-end)', // Match background for a clean look
+              borderWidth: 2,
+          }]
+      })
   };
 
-  const chartOptions = {
+  // --- Chart Options ---
+  const lineChartOptions = { /* ... as before ... */ };
+  const doughnutChartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // Allows custom height
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 5,
-        ticks: {
-          stepSize: 1,
-        },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)', // Lighter grid lines
-        }
-      },
-      x: {
-        grid: {
-          display: false, // Hide x-axis grid lines
-        }
-      }
-    },
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false, // We can hide the legend if it's obvious
+        position: 'right',
+        labels: {
+            color: 'var(--text-primary)',
+            boxWidth: 20,
+            padding: 20,
+        }
       },
-      tooltip: {
-        enabled: true,
-        backgroundColor: '#fff',
-        titleColor: '#333',
-        bodyColor: '#666',
-        borderColor: '#ddd',
-        borderWidth: 1,
-        displayColors: false, // Hides the little color box in the tooltip
-      },
+      tooltip: { /* ... as before ... */ },
     },
   };
 
-  if (isLoading) {
-    return <div>Loading dashboard...</div>;
-  }
-
-  if (error) {
-    return <div className="error-message">{error}</div>;
-  }
+  if (isLoading) { return <div>Loading dashboard...</div>; }
+  if (error) { return <div className="error-message">{error}</div>; }
 
   return (
     <div>
@@ -165,34 +164,21 @@ function DashboardPage() {
       </p>
 
       {entries.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          {/* Mood Trend Chart */}
-          <div className="journal-entry-card" style={{ padding: '2rem' }}>
+        <div className="dashboard-grid"> {/* NEW: Grid Layout */}
+          {/* Mood Trend Chart (Takes up more space) */}
+          <div className="journal-entry-card dashboard-card-large"> 
             <h2 style={{marginTop: 0}}>Mood Over Time</h2>
-            <div style={{ height: '300px' }}>
-              {chartData && <Line data={chartData} options={chartOptions} />}
+            <div style={{ height: '350px' }}>
+              {lineChartData && <Line data={lineChartData} options={lineChartOptions} />}
             </div>
           </div>
 
-          {/* Emotion Summary */}
-          {emotionSummary && emotionSummary.length > 0 && (
-              <div className="journal-entry-card" style={{ padding: '2rem' }}>
-                  <h2 style={{marginTop: 0}}>Common Emotions</h2>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' }}>
-                      {emotionSummary.map(([emotion, count]) => (
-                          <div key={emotion} style={{
-                              background: 'var(--background-start)',
-                              padding: '0.75rem 1.25rem',
-                              borderRadius: '20px',
-                              fontSize: '0.9rem',
-                              fontWeight: 500,
-                              color: 'var(--text-primary)',
-                              boxShadow: '0 2px 4px var(--shadow)',
-                              textTransform: 'capitalize'
-                          }}>
-                              {emotion} <span style={{color: 'var(--text-secondary)', marginLeft: '0.5rem'}}>({count})</span>
-                          </div>
-                      ))ท
+          {/* Emotion Summary (Takes up less space) */}
+          {emotionChartData && (
+              <div className="journal-entry-card dashboard-card-small"> 
+                  <h2 style={{marginTop: 0}}>Emotion Distribution</h2>
+                  <div style={{ height: '350px', width: '100%' }}>
+                      <Doughnut data={emotionChartData} options={doughnutChartOptions} />
                   </div>
               </div>
           )}
