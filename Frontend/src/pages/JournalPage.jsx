@@ -68,28 +68,20 @@ function JournalPage({ onLogout }) {
     setInsights([]);
 
     try {
-      // Create journal entry with real Django API
       const journalData = {
         title: title || `Journal Entry - ${new Date().toLocaleDateString()}`,
         content: entry,
         mood_rating: moodRating
       };
 
-      console.log('Creating journal entry:', journalData);
-      
-      // This will trigger AI analysis on your Django backend
       const response = await journalAPI.createEntry(journalData);
       
-      console.log('Journal entry created with insights:', response);
-      
-      // Display the real AI insights from your backend
       if (response.insights && response.insights.length > 0) {
         setInsights(response.insights);
       } else {
         setError('No insights were generated. Please try again.');
       }
 
-      // Clear form and reload recent entries
       setEntry("");
       setTitle("");
       setMoodRating(3);
@@ -210,7 +202,11 @@ function JournalPage({ onLogout }) {
       {/* Display Real AI Insights */}
       <div className="insights-container">
         {insights.map((insight, index) => (
-          <div key={index} className={getInsightCardClass(insight.insight_type)}>
+          <div 
+            key={index} 
+            className={`${getInsightCardClass(insight.insight_type)} unfold`} 
+            style={{ animationDelay: `${index * 0.2}s` }}
+          >
             <h2>
               {InsightIcons[insight.insight_type]} 
               {insight.title}
