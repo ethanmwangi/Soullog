@@ -37,7 +37,7 @@ const InsightIcons = {
   islamic: <CrescentIcon />,
 };
 
-function JournalPage({ onLogout }) {
+function JournalPage() { // Removed onLogout prop
   const [entry, setEntry] = useState("");
   const [title, setTitle] = useState("");
   const [moodRating, setMoodRating] = useState(3);
@@ -112,16 +112,9 @@ function JournalPage({ onLogout }) {
   };
 
   return (
-    <div 
-      className="app-container"
-      style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '2rem'
-      }}
-    >
+    <>
       <main className="journal-entry-card">
-        <button className="logout-button" onClick={onLogout}>Logout</button>
+        {/* The old logout button has been removed from here */}
         <h1>SoulLog</h1>
         <p>Your safe space to reflect, understand, and grow.</p>
         
@@ -258,7 +251,7 @@ function JournalPage({ onLogout }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

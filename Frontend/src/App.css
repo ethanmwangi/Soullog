@@ -29,14 +29,9 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: linear-gradient(135deg, var(--background-start), var(--background-end));
   color: var(--text-primary);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start; /* Center content vertically */
-  min-height: 100vh;
   margin: 0;
-  padding: 2rem 0;
   transition: background 0.3s, color 0.3s;
-  
+}
 
 .app-container {
   width: 100%;
@@ -44,6 +39,95 @@ body {
   padding: 2rem;
   z-index: 1; /* Ensure app content is above particles */
 }
+
+/* Main layout */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-wrap {
+  flex-grow: 1;
+  padding: 2rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+
+/* --- Navbar Styles --- */
+.navbar {
+  width: 100%;
+  background: var(--white);
+  box-shadow: 0 2px 8px var(--shadow);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.navbar-left, .navbar-right, .nav-links, .user-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-logo {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--accent-gold);
+  text-decoration: none;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding-bottom: 5px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.nav-links a.active, .nav-links a:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-gold);
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--accent-gold);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.user-info span {
+  font-weight: 500;
+}
+
+.logout-button-nav {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.logout-button-nav:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
 
 .journal-entry-card {
   background: var(--white);
@@ -287,87 +371,4 @@ h2 {
 .spiritual-button.islamic:hover {
   border-color: var(--accent-emerald);
   color: var(--accent-emerald);
-}
-
-blockquote {
-  font-style: italic;
-  color: var(--text-secondary);
-  margin: 1rem 0;
-  padding-left: 1.5rem;
-  border-left: 3px solid var(--border-color);
-}
-
-cite {
-  display: block;
-  text-align: right;
-  font-style: normal;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
-
-/* --- Custom Icons --- */
-.icon {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  margin-right: 0.75rem;
-  fill: currentColor;
-}
-
-/* --- Theme Toggle --- */
-.theme-toggle {
-  position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: var(--white);
-  border: 1px solid var(--border-color);
-  border-radius: 30px;
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  box-shadow: 0 2px 8px var(--shadow);
-  z-index: 10; /* Make sure it's on top */
-}
-
-.toggle-button {
-  font-size: 1.2rem;
-  padding: 4px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-}
-
-.toggle-button.active {
-  background: var(--accent-gold);
-  color: white;
-}
-
-/* --- Background Particle Animation --- */
-#particle-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0; /* Behind all content */
-  pointer-events: none; /* Allow clicks to go through */
-}
-
-.particle {
-  position: absolute;
-  background-color: var(--accent-gold);
-  border-radius: 50%;
-  opacity: 0.3;
-  animation: move 25s linear infinite;
-}
-
-@keyframes move {
-  0% {
-    transform: translateY(100vh) translateX(var(--x-start)) scale(var(--scale));
-  }
-  100% {
-    transform: translateY(-10vh) translateX(var(--x-end)) scale(var(--scale));
-  }
 }

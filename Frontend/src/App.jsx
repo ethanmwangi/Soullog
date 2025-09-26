@@ -1,13 +1,21 @@
 
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { authAPI } from './services/api';
 import './App.css';
 
+// --- Page Imports ---
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JournalPage from './pages/JournalPage';
+import DashboardPage from './pages/DashboardPage';
+import InsightsPage from './pages/InsightsPage';
+import ProfilePage from './pages/ProfilePage';
 
+// --- Component Imports ---
+import Navbar from './components/Navbar';
+
+// --- UI Components ---
 const ParticleContainer = () => {
   const particles = Array.from({ length: 30 }).map((_, i) => {
     const size = Math.random() * 5 + 2;
@@ -30,6 +38,16 @@ const ThemeToggle = ({ theme, toggleTheme }) => (
   <div className="theme-toggle" onClick={toggleTheme}>
     <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
     <button className={`toggle-button ${theme === 'dark' ? 'active' : ''}`}>🌙</button>
+  </div>
+);
+
+// --- Layout for authenticated users ---
+const LoggedInLayout = ({ user, onLogout }) => (
+  <div className="main-layout">
+    <Navbar user={user} onLogout={onLogout} />
+    <main className="content-wrap">
+      <Outlet /> {/* Child routes (Journal, Dashboard, etc.) render here */}
+    </main>
   </div>
 );
 
@@ -65,20 +83,17 @@ function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // This now accepts the user data directly from login/register pages
   const handleLogin = (userData) => {
-    console.log("App: handleLogin called with user data:", userData);
     setUser(userData);
   };
 
   const handleLogout = async () => {
     await authAPI.logout();
     setUser(null);
-    // No need to navigate here, the Routes will handle it
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; 
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>; 
   }
 
   return (
@@ -87,18 +102,25 @@ function App() {
       <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
       
       <Routes>
-        <Route 
-          path="/login" 
-          element={!user ? <LoginPage onLogin={handleLogin} /> : <Navigate to="/" />}
-        />
-        <Route 
-          path="/register" 
-          element={!user ? <RegisterPage onLogin={handleLogin} /> : <Navigate to="/" />}
-        />
-        <Route 
-          path="/"
-          element={user ? <JournalPage user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}
-        />
+        {user ? (
+          // --- Logged IN Routes ---
+          <Route element={<LoggedInLayout user={user} onLogout={handleLogout} />}>
+            <Route path="/" element={<JournalPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/insights" element={<InsightsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            {/* Redirect any other authenticated path to home */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Route>
+        ) : (
+          // --- Logged OUT Routes ---
+          <>
+            <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+            <Route path="/register" element={<RegisterPage onLogin={handleLogin} />} />
+            {/* Redirect any other path to login */}
+            <Route path="*" element={<Navigate to="/login" />} />
+          </>
+        )}
       </Routes>
     </Router>
   );
