@@ -46,7 +46,8 @@ const LoggedInLayout = ({ user, onLogout }) => (
   <div className="main-layout">
     <Navbar user={user} onLogout={onLogout} />
     <main className="content-wrap">
-      <Outlet /> {/* Child routes (Journal, Dashboard, etc.) render here */}
+      {/* Pass the user object to all child routes */}
+      <Outlet context={{ user }} />
     </main>
   </div>
 );

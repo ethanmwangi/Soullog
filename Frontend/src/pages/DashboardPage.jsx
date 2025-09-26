@@ -192,7 +192,7 @@ function DashboardPage() {
                           }}>
                               {emotion} <span style={{color: 'var(--text-secondary)', marginLeft: '0.5rem'}}>({count})</span>
                           </div>
-                      ))}
+                      ))ท
                   </div>
               </div>
           )}
