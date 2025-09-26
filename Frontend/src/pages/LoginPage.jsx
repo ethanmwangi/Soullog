@@ -1,6 +1,5 @@
-// Frontend/src/pages/LoginPage.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../App.css';
@@ -11,28 +10,31 @@ function LoginPage({ onLogin }) {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // Clear any lingering tokens from previous sessions
+    localStorage.removeItem('authToken');
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      // For now, let's create a simple mock login since your Django doesn't have login endpoint yet
-      // We'll implement a quick token-based login
+      console.log('Login attempt with:', { email, password });
+      const response = await authAPI.login({ email, password });
       
-      // Store a mock token for now - we can make this real later
-      const mockToken = 'mock-token-' + Date.now();
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('userEmail', email);
-      
-      console.log("Login attempt with:", { email, password });
-      
-      // Call the onLogin function to update App state
-      onLogin();
-      
+      if (response && response.token) {
+        // On successful login, the token is already saved by api.js
+        // Now, call the onLogin function passed from App.jsx to update the app state
+        onLogin();
+      } else {
+        setError('Login failed: No token received.');
+      }
     } catch (err) {
-      console.error('Login error:', err);
-      setError(err.error || 'Login failed. Please check your credentials.');
+      // This will catch errors from the API call, like invalid credentials
+      const errorMessage = err.error || 'An unexpected error occurred.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
