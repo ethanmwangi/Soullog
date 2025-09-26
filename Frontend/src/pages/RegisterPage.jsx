@@ -21,18 +21,16 @@ function RegisterPage({ onLogin }) {
       const response = await authAPI.register({ username, email, password });
       
       if (response && response.token) {
-        // Registration successful, token is saved by api.js
-        // Now, log the user in to update the app state
-        onLogin();
-        
-        // You can also navigate them to the main journal page
+        console.log("Register success: Response received", response);
+        // Pass the user data directly to the App component
+        onLogin(response.user);
+        // Navigate to the main page
         navigate('/');
       } else {
-        setError('Registration failed: No token received.');
+        setError('Registration failed: Invalid response from server.');
       }
       
     } catch (err) {
-      // Handle specific backend validation errors
       const errorMessages = Object.values(err).flat().join(' ');
       setError(errorMessages || 'An unexpected error occurred.');
     } finally {

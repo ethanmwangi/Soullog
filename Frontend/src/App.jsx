@@ -8,7 +8,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import JournalPage from './pages/JournalPage';
 
-// --- Background Particle Component (no changes needed) ---
 const ParticleContainer = () => {
   const particles = Array.from({ length: 30 }).map((_, i) => {
     const size = Math.random() * 5 + 2;
@@ -27,7 +26,6 @@ const ParticleContainer = () => {
   return <div id="particle-container">{particles}</div>;
 };
 
-// --- Theme Toggle Component (no changes needed) ---
 const ThemeToggle = ({ theme, toggleTheme }) => (
   <div className="theme-toggle" onClick={toggleTheme}>
     <button className={`toggle-button ${theme === 'light' ? 'active' : ''}`}>☀️</button>
@@ -35,34 +33,30 @@ const ThemeToggle = ({ theme, toggleTheme }) => (
   </div>
 );
 
-// --- Main App Component ---
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // Start loading to check auth
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Theme management
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   useEffect(() => {
-    // --- This is the new, real authentication check ---
     const checkAuth = async () => {
       const token = localStorage.getItem('authToken');
       if (token) {
         try {
           const currentUser = await authAPI.getCurrentUser();
-          setUser(currentUser); // Token is valid, user is logged in
+          setUser(currentUser);
         } catch (error) {
-          localStorage.removeItem('authToken'); // Token is invalid, remove it
+          console.error("Auth check failed, removing token", error);
+          localStorage.removeItem('authToken');
           setUser(null);
         }
-      } else {
-        setUser(null); // No token, user is not logged in
       }
-      setIsLoading(false); // Finished auth check
+      setIsLoading(false);
     };
     checkAuth();
   }, []);
@@ -71,26 +65,20 @@ function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  // Real login handler
-  const handleLogin = async () => {
-    try {
-      const currentUser = await authAPI.getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      console.error("Login failed: Could not fetch user after token was set.");
-      setUser(null);
-    }
+  // This now accepts the user data directly from login/register pages
+  const handleLogin = (userData) => {
+    console.log("App: handleLogin called with user data:", userData);
+    setUser(userData);
   };
 
-  // Real logout handler
   const handleLogout = async () => {
     await authAPI.logout();
     setUser(null);
+    // No need to navigate here, the Routes will handle it
   };
 
-  // While checking auth, show a loading indicator
   if (isLoading) {
-    return <div>Loading...</div>; // Or a proper spinner component
+    return <div>Loading...</div>; 
   }
 
   return (
@@ -109,7 +97,7 @@ function App() {
         />
         <Route 
           path="/"
-          element={user ? <JournalPage onLogout={handleLogout} /> : <Navigate to="/login" />}
+          element={user ? <JournalPage user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}
         />
       </Routes>
     </Router>

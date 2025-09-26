@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../App.css';
 
@@ -9,11 +9,7 @@ function LoginPage({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    // Clear any lingering tokens from previous sessions
-    localStorage.removeItem('authToken');
-  }, []);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,19 +18,21 @@ function LoginPage({ onLogin }) {
 
     try {
       console.log('Login attempt with:', { email, password });
+      // The response now contains both the token and user data
       const response = await authAPI.login({ email, password });
       
       if (response && response.token) {
-        // On successful login, the token is already saved by api.js
-        // Now, call the onLogin function passed from App.jsx to update the app state
-        onLogin();
+        console.log("Login success: Response received", response);
+        // Pass the user data directly to the App component
+        onLogin(response.user);
+        // Navigate to the main page
+        navigate('/');
       } else {
-        setError('Login failed: No token received.');
+        setError('Login failed: Invalid response from server.');
       }
     } catch (err) {
-      // This will catch errors from the API call, like invalid credentials
-      const errorMessage = err.error || 'An unexpected error occurred.';
-      setError(errorMessage);
+      const errorMessages = Object.values(err).flat().join(' ');
+      setError(errorMessages || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
