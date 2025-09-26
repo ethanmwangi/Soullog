@@ -22,10 +22,14 @@ function RegisterPage({ onLogin }) {
       
       if (response && response.token) {
         console.log("Register success: Response received", response);
-        // Pass the user data directly to the App component
-        onLogin(response.user);
-        // Navigate to the main page
-        navigate('/');
+        // Correctly assemble the user object from the response
+        const userData = {
+          id: response.user_id,
+          username: response.username,
+          email: response.email,
+        };
+        onLogin(userData); // Pass the assembled user data to App
+        navigate('/'); // Navigate to the main page
       } else {
         setError('Registration failed: Invalid response from server.');
       }

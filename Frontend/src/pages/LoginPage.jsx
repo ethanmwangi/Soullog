@@ -17,16 +17,18 @@ function LoginPage({ onLogin }) {
     setError(null);
 
     try {
-      console.log('Login attempt with:', { email, password });
-      // The response now contains both the token and user data
       const response = await authAPI.login({ email, password });
       
       if (response && response.token) {
         console.log("Login success: Response received", response);
-        // Pass the user data directly to the App component
-        onLogin(response.user);
-        // Navigate to the main page
-        navigate('/');
+        // Correctly assemble the user object from the response
+        const userData = {
+          id: response.user_id,
+          username: response.username,
+          email: response.email,
+        };
+        onLogin(userData); // Pass the assembled user data to App
+        navigate('/'); // Navigate to the main page
       } else {
         setError('Login failed: Invalid response from server.');
       }
