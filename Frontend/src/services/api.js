@@ -32,6 +32,9 @@ export const authAPI = {
   register: async (userData) => {
     try {
       const response = await api.post('/auth/register/', userData);
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+      }
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Registration failed' };
@@ -42,6 +45,9 @@ export const authAPI = {
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login/', credentials);
+      if (response.data.token) {
+        localStorage.setItem('authToken', response.data.token);
+      }
       return response.data;
     } catch (error) {
       throw error.response?.data || { error: 'Login failed' };
@@ -70,7 +76,7 @@ export const authAPI = {
   }
 };
 
-// Journal API functions (we'll use these next)
+// Journal API functions
 export const journalAPI = {
   // Create journal entry
   createEntry: async (entryData) => {
