@@ -1,11 +1,10 @@
-// Frontend/src/pages/RegisterPage.jsx
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../App.css';
 
-function RegisterPage() {
+function RegisterPage({ onLogin }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,23 +18,23 @@ function RegisterPage() {
     setError(null);
 
     try {
-      // Call Django API
-      const response = await authAPI.register({
-        username,
-        email,
-        password
-      });
-
-      // Store token and redirect
-      localStorage.setItem('authToken', response.token);
-      console.log('Registration successful:', response);
+      const response = await authAPI.register({ username, email, password });
       
-      // Redirect to login or directly to app
-      navigate('/login');
+      if (response && response.token) {
+        // Registration successful, token is saved by api.js
+        // Now, log the user in to update the app state
+        onLogin();
+        
+        // You can also navigate them to the main journal page
+        navigate('/');
+      } else {
+        setError('Registration failed: No token received.');
+      }
       
     } catch (err) {
-      console.error('Registration error:', err);
-      setError(err.error || 'Registration failed. Please try again.');
+      // Handle specific backend validation errors
+      const errorMessages = Object.values(err).flat().join(' ');
+      setError(errorMessages || 'An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
@@ -67,10 +66,9 @@ function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength="6"
           />
           <button className="auth-button" type="submit" disabled={isLoading}>
-            {isLoading ? 'Creating Account...' : 'Create Account'}
+            {isLoading ? 'Creating...' : 'Create Account'}
           </button>
           {error && <p className="error-message">{error}</p>}
         </form>
