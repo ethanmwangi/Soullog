@@ -10,7 +10,7 @@ pip install -r backend/requirements.txt
 echo "Installing Node.js dependencies and building React app..."
 cd Frontend
 npm install
-npm run build -- --output-path=../_build # Specify output path
+npm run build
 cd ..
 
 # -- Collect Static Files and Run Migrations --
