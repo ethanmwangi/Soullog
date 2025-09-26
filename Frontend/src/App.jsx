@@ -10,7 +10,7 @@ import RegisterPage from './pages/RegisterPage';
 import JournalPage from './pages/JournalPage';
 import DashboardPage from './pages/DashboardPage';
 import InsightsPage from './pages/InsightsPage';
-
+import EntryDetailPage from './pages/EntryDetailPage';
 // --- Component Imports ---
 import Navbar from './components/Navbar';
 

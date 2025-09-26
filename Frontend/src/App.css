@@ -98,22 +98,18 @@ body {
 
 /* --- Theme Toggle --- */
 .theme-toggle {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
   background: var(--white);
   border: 1px solid var(--border-color);
   border-radius: 30px;
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   display: flex;
-  box-shadow: 0 2px 8px var(--shadow);
-  z-index: 100;
+  box-shadow: 0 1px 4px var(--shadow);
 }
 
 .toggle-button {
-  font-size: 1rem;
-  padding: 8px 12px;
+  font-size: 0.8rem; /* smaller icons */
+  padding: 6px 10px; /* adjusted padding */
   border-radius: 20px;
   border: none;
   background: transparent;
@@ -145,6 +141,7 @@ body {
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  position: relative; /* Added for dropdown positioning */
 }
 
 .nav-links {
@@ -192,19 +189,34 @@ body {
   font-size: 1rem;
 }
 
+.logout-dropdown {
+  position: absolute;
+  top: calc(100% + 10px); /* Position below the navbar-right content */
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px var(--shadow);
+  z-index: 100;
+  overflow: hidden;
+}
+
+
 .logout-button-nav {
   background: none;
-  border: 1px solid var(--border-color);
+  border: none;
   color: var(--text-secondary);
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
+  display: block;
+  width: 100%;
+  text-align: left;
 }
 
 .logout-button-nav:hover {
-  border-color: var(--accent-gold);
+  background: rgba(201, 168, 124, 0.1);
   color: var(--accent-gold);
 }
 
