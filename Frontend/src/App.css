@@ -1,3 +1,9 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 :root {
   --background-start: #f7f3e9;
@@ -30,31 +36,96 @@ body {
   background: linear-gradient(135deg, var(--background-start), var(--background-end));
   color: var(--text-primary);
   margin: 0;
+  padding: 0;
+  min-height: 100vh;
   transition: background 0.3s, color 0.3s;
 }
 
-.app-container {
-  width: 100%;
-  max-width: 800px;
-  padding: 2rem;
-  z-index: 1; /* Ensure app content is above particles */
-}
-
-/* Main layout */
+/* Main layout structure */
 .main-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative;
 }
 
 .content-wrap {
-  flex-grow: 1;
-  padding: 2rem;
+  flex: 1;
   width: 100%;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
+  padding: 2rem;
+  position: relative;
+  z-index: 2;
 }
 
+/* --- Background Particles --- */
+#particle-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  background-color: var(--accent-gold);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float 25s infinite linear;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) translateX(var(--x-start)) scale(var(--scale));
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(var(--x-end)) scale(var(--scale));
+    opacity: 0;
+  }
+}
+
+/* --- Theme Toggle --- */
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  box-shadow: 0 2px 8px var(--shadow);
+  z-index: 100;
+}
+
+.toggle-button {
+  font-size: 1rem;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-button.active {
+  background: var(--accent-gold);
+  color: white;
+}
 
 /* --- Navbar Styles --- */
 .navbar {
@@ -66,18 +137,24 @@ body {
   justify-content: space-between;
   align-items: center;
   z-index: 10;
-  box-sizing: border-box;
+  position: sticky;
+  top: 0;
 }
 
-.navbar-left, .navbar-right, .nav-links, .user-info {
+.navbar-left, .navbar-right {
   display: flex;
   align-items: center;
   gap: 1.5rem;
 }
 
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
 .nav-logo {
   font-size: 1.5rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--accent-gold);
   text-decoration: none;
 }
@@ -86,31 +163,33 @@ body {
   text-decoration: none;
   color: var(--text-secondary);
   font-weight: 500;
-  padding-bottom: 5px;
-  border-bottom: 2px solid transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .nav-links a.active, .nav-links a:hover {
   color: var(--text-primary);
-  border-bottom-color: var(--accent-gold);
+  background: rgba(201, 168, 124, 0.1);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: var(--accent-gold);
+  background: var(--accent-gold);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
-  font-size: 1.2rem;
-}
-
-.user-info span {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .logout-button-nav {
@@ -120,6 +199,7 @@ body {
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 0.875rem;
   transition: all 0.3s ease;
 }
 
@@ -128,92 +208,28 @@ body {
   color: var(--accent-gold);
 }
 
-
+/* --- Card Components --- */
 .journal-entry-card {
   background: var(--white);
   border-radius: 16px;
-  box-shadow: 0 8px 24px var(--shadow);
-  padding: 2.5rem;
-  text-align: center;
-  transition: background 0.3s, box-shadow 0.3s;
-  position: relative; /* Ensure z-index is respected */
-  z-index: 1;
-}
-
-.logout-button {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: color 0.3s;
-}
-
-.logout-button:hover {
-  color: var(--accent-gold);
-}
-
-h1 {
-  font-size: 2.5rem;
-  font-weight: 300;
-  margin-bottom: 0.5rem;
-}
-
-p {
-  color: var(--text-secondary);
-  font-size: 1.1rem;
-  margin-bottom: 2rem;
-}
-
-textarea {
-  width: 100%;
-  min-height: 200px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  padding: 1.5rem;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  resize: vertical;
-  margin-bottom: 2rem;
-  box-sizing: border-box; /* Ensures padding is included in the width */
-  background: var(--background-start);
-  color: var(--text-primary);
-  transition: background 0.3s, color 0.3s, border-color 0.3s;
-}
-
-textarea:focus {
-  outline: none;
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.2);
-}
-
-.insight-button {
-  background: linear-gradient(135deg, var(--accent-gold), #b38e5d);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.insight-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-/* --- Authentication Styles --- */
-.auth-container {
-  width: 100%;
-  max-width: 420px;
+  box-shadow: 0 4px 20px var(--shadow);
   padding: 2rem;
-  z-index: 1;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* --- Authentication Pages --- */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .auth-card {
@@ -222,13 +238,21 @@ textarea:focus {
   box-shadow: 0 8px 24px var(--shadow);
   padding: 2.5rem;
   text-align: center;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 2;
 }
 
 .auth-card h1 {
   font-size: 2rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
 }
 
 .auth-card p {
+  color: var(--text-secondary);
   margin-bottom: 2rem;
 }
 
@@ -246,8 +270,7 @@ textarea:focus {
   font-size: 1rem;
   background: var(--background-start);
   color: var(--text-primary);
-  box-sizing: border-box;
-  transition: background 0.3s, color 0.3s, border-color 0.3s;
+  transition: all 0.3s ease;
 }
 
 .auth-card input:focus {
@@ -258,31 +281,32 @@ textarea:focus {
 
 .auth-button {
   background: linear-gradient(135deg, var(--accent-gold), #b38e5d);
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 12px;
   padding: 1rem;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 1rem;
 }
 
-.auth-button:hover {
+.auth-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(201, 168, 124, 0.4);
 }
 
 .auth-button:disabled {
-  background: #ccc;
+  opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .auth-footer {
   margin-top: 2rem;
   font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .auth-footer a {
@@ -292,83 +316,303 @@ textarea:focus {
 }
 
 .error-message {
-  color: #d9534f;
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 0.75rem;
+  border-radius: 8px;
   margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
+/* --- Journal Page Styles --- */
+h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  color: var(--text-primary);
+}
 
-/* --- Insight Animations & Styles --- */
+p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+  margin-bottom: 1rem;
+  background: var(--background-start);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 124, 0.2);
+}
+
+.insight-button {
+  background: linear-gradient(135deg, var(--accent-gold), #b38e5d);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 auto;
+  display: block;
+}
+
+.insight-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201, 168, 124, 0.4);
+}
+
+.insight-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cancel-button {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* --- Insights Styles --- */
 .insights-container {
-  margin-top: 1rem;
-  perspective: 1000px;
-}
-
-@keyframes unfold { 
-  0% { transform: rotateX(-90deg); opacity: 0; }
-  100% { transform: rotateX(0deg); opacity: 1; }
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 100%;
 }
 
 .insight-card {
   background: var(--white);
   border-radius: 12px;
-  padding: 2rem;
-  margin: 1.5rem 0;
-  border-left: 5px solid;
+  padding: 1.5rem;
+  border-left: 4px solid;
   box-shadow: 0 4px 12px var(--shadow);
-  transform-origin: top center;
-  animation: unfold 0.6s ease-out forwards;
-  transition: background 0.3s, box-shadow 0.3s;
+  animation: slideIn 0.5s ease-out forwards;
+  width: 100%;
+  max-width: 100%;
 }
 
 .insight-card.psychological {
-  border-color: var(--accent-gold);
+  border-left-color: var(--accent-gold);
 }
 
 .insight-card.biblical {
-  border-color: var(--accent-purple);
+  border-left-color: var(--accent-purple);
 }
 
 .insight-card.islamic {
-  border-color: var(--accent-emerald);
+  border-left-color: var(--accent-emerald);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 h2 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-top: 0;
-  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
   display: flex;
   align-items: center;
+  color: var(--text-primary);
 }
 
-.spiritual-options {
-  display: flex;
-  gap: 1rem;
+.icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+blockquote {
+  font-style: italic;
+  color: var(--text-secondary);
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.02);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+/* --- Dashboard Styles --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
   margin-top: 2rem;
 }
 
-.spiritual-button {
-  flex-grow: 1;
-  background: none;
+.dashboard-card-large, .dashboard-card-small {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px var(--shadow);
+  padding: 1.5rem;
+}
+
+/* --- Filter Buttons --- */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.filter-button {
+  background: transparent;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1rem;
-  font-size: 1rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
   cursor: pointer;
+  font-size: 0.875rem;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  color: var(--text-secondary);
+  gap: 0.5rem;
 }
 
-.spiritual-button.biblical:hover {
-  border-color: var(--accent-purple);
-  color: var(--accent-purple);
+.filter-button:hover, .filter-button-active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  background: rgba(201, 168, 124, 0.1);
 }
 
-.spiritual-button.islamic:hover {
-  border-color: var(--accent-emerald);
-  color: var(--accent-emerald);
+/* --- Entry Management Buttons --- */
+.edit-button, .delete-button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-weight: 500;
+}
+
+.edit-button {
+  background: var(--accent-gold);
+  color: white;
+}
+
+.edit-button:hover {
+  background: #b38e5d;
+}
+
+.delete-button {
+  background: #dc3545;
+  color: white;
+}
+
+.delete-button:hover {
+  background: #c82333;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .navbar-left, .navbar-right {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .content-wrap {
+    padding: 1rem;
+  }
+  
+  .journal-entry-card {
+    padding: 1.5rem;
+  }
+  
+  .auth-card {
+    padding: 2rem;
+    margin: 1rem;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  h1 {
+    font-size: 2rem;
+  }
+  
+  .theme-toggle {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-wrap {
+    padding: 0.5rem;
+  }
+  
+  .journal-entry-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
+  
+  .auth-card {
+    padding: 1.5rem;
+  }
+  
+  h1 {
+    font-size: 1.75rem;
+  }
+  
+  .navbar {
+    padding: 0.75rem;
+  }
 }

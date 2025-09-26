@@ -10,7 +10,6 @@ import RegisterPage from './pages/RegisterPage';
 import JournalPage from './pages/JournalPage';
 import DashboardPage from './pages/DashboardPage';
 import InsightsPage from './pages/InsightsPage';
-import ProfilePage from './pages/ProfilePage';
 
 // --- Component Imports ---
 import Navbar from './components/Navbar';
@@ -46,7 +45,6 @@ const LoggedInLayout = ({ user, onLogout }) => (
   <div className="main-layout">
     <Navbar user={user} onLogout={onLogout} />
     <main className="content-wrap">
-      {/* Pass the user object to all child routes */}
       <Outlet context={{ user }} />
     </main>
   </div>
@@ -109,7 +107,6 @@ function App() {
             <Route path="/" element={<JournalPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
             {/* Redirect any other authenticated path to home */}
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
