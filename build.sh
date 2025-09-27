@@ -15,5 +15,6 @@ cd ..
 
 # -- Collect Static Files and Run Migrations --
 echo "Collecting static files and running database migrations..."
+cd backend
 python backend/manage.py collectstatic --no-input
 python backend/manage.py migrate
